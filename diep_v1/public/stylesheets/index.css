@@ -1,0 +1,20 @@
+html {
+	overflow: hidden;
+}
+
+body {
+    padding: 0px;
+    margin:0px;
+    font: 14px "Lucida Grande", Helvetica, Arial, sans-serif;
+    overflow: auto;
+    width: calc(100vw + 20px);
+    height: calc(100vh + 20px);
+}
+
+#stage{
+    background: url("../images/map01.jpg") !important;
+}
+
+a {
+  color: #00B7FF;
+}
