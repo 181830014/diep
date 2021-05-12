@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Tank</title>
+    <script src="jquery-3.6.0.min.js"></script>
+    <script src="easeljs.min.js"></script>
+    <script src="tweenjs.min.js"></script>
+    <script src="basemodel.js"></script>
+    <script src="widget.js"></script>
+</head>
+<body>
+    <canvas id="mycanvas" height="2000" width="2000" style="background-color:gainsboro;"></canvas>
+    <script>
+        var stage = new createjs.Stage('mycanvas');
+        var bm = new BoostMenu(0, 540);
+        var minimap = new MiniMap(1200, 540, 2000, './img/map_172x172.png');
+        var iw = new InfoBar(700, 680);
+        var updmenu = new UpgradeMenu(10, 10);
+        var tankX = 1000;
+        var tankY = 1000;
+        var tic = 0;
+        stage.addChild(bm.model, minimap.model, iw.model, updmenu.model);
+        createjs.Ticker.framerate = 60;
+        createjs.Ticker.addEventListener('tick', function() {
+            ++tic;
+            if(tic % 30 == 0) {
+                tankX += (Math.ceil(Math.random() * 41) - 21) * 5;
+                tankY += (Math.ceil(Math.random() * 41) - 21) * 5;
+                tankX = Math.max(0, Math.min(2000, tankX));
+                tankY = Math.max(0, Math.min(2000, tankY));
+                minimap.animateCoord(tankX, tankY);
+            }
+            if(tic % 600 == 0) {
+                updmenu.slipIn();
+                bm.slipIn();
+            }
+            if(tic % 600 == 300) {
+                bm.slipOut();
+            }
+            stage.update();
+        });
+        iw.init('hsini', 'Tank', 30, 4, 0.7);
+        updmenu.setItemOnShow(1, 32);
+        updmenu.setItemOnShow(2, 80);
+        updmenu.setItemOnShow(3, 96);
+    </script>
+</body>
+</html>
