@@ -38,9 +38,15 @@
             if(tic % 600 == 300) {
                 bm.slipOut();
             }
+            if(tic % 300 == 0) {
+                iw.animateExp(iw.level + 5, 0.7);
+            }
+            if(tic % 300 == 150) {
+                 iw.animateExp(iw.level, Math.min(1.0, Math.random() * 1.5));
+            }
             stage.update();
         });
-        iw.init('hsini', 'Tank', 30, 4, 0.7);
+        iw.init('hsini', 'Tank', 30, 4, 0);
         updmenu.setItemOnShow(1, 32);
         updmenu.setItemOnShow(2, 80);
         updmenu.setItemOnShow(3, 96);

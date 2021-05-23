@@ -143,7 +143,10 @@ function InfoBar (modelX, modelY) {
     this.expText.y = 30;
     this.scoreShape.graphics.ss(2).s('#3e3e3e').f('#6cf0a3').rr(-140, -9, 280, 18, 9);
     this.expShapeBg.graphics.f('#3e3e3e').rr(-190, 12, 380, 22, 11);
-    this.expShapeFg.graphics.f('#f0d96c').rr(-188, 14, 376 * 0.5, 18, 9);
+    this.expShapeMask.graphics.rr(-188, 14, 376, 18, 9);
+    this.expShapeFg.x = -190;
+    this.expShapeFg.graphics.f('#f0d96c').dr(-380, 14, 760, 18);
+    this.expShapeFg.mask = this.expShapeMask;
 }
 
 InfoBar.prototype.asyncUpdate = function () {
@@ -170,13 +173,24 @@ InfoBar.prototype.setExp = function (lv, e, apply = false) {
     this.level = lv;
     this.exp = e;
     this.expText.text = 'Lvl ' + this.level + ' ' + this.arms;
-    this.expShapeFg.graphics.clear();
-    this.expShapeFg.graphics.f('#f0d96c').rr(-188, 14, 376 * this.exp, 18, 9);
+    this.expShapeFg.scaleX = this.exp;
     if(apply) this.asyncUpdate();
 }
 
 InfoBar.prototype.animateExp = function (lv, e) {
-    // XXX
+    this.exp = e;
+    if(this.level < lv) {
+        createjs.Tween.get(this.expShapeFg, {loop:true, override:true}).to({scaleX: 1.0}, 300).
+            wait(50).to({scaleX: 0.0}, 100).wait(50).call(
+            $.proxy(function () {
+                ++this.level;
+                this.expText.text = 'Lvl ' + this.level + ' ' + this.arms;
+                if(this.level == lv) 
+                    createjs.Tween.get(this.expShapeFg, {override:true}).to({scaleX: this.exp}, 500);
+            }, this)
+        );
+    }
+    else createjs.Tween.get(this.expShapeFg, {override:true}).to({scaleX: this.exp}, 500);
 }
 
 InfoBar.prototype.init = function (nstr, astr, s = 0, lv = 1, e = 0) {
