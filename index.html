@@ -6,21 +6,7 @@
   <script src="lib/jcanvas.min.js"></script>
   <script src="lib/createjs.min.js"></script>
   <script src="lib/widget.js"></script>
-<!--   <script src="lib/basemodel.js"></script>-->
-  <style>
-    #Hcanvas {
-      position: absolute;
-      left: 0;
-      top: 0;
-      z-index: 2;
-    }
-    #canvas {
-      position: absolute;
-      left: 0;
-      top: 0;
-      z-index: 1;
-    }
-  </style>
+  <script src="lib/vue.min.js"></script>
   <script type="text/javascript">
   	// 忽略ctrl+滚轮缩放事件
   	// others
@@ -36,12 +22,54 @@
 		}
 	}, {passive: false}); 
   </script>
+  <link rel="stylesheet" type="text/css" href="stylesheets/index_login.css">
 </head>
+
+<div id="login-page" class="login-page">
+  <div class="input-cont">
+    <input id="name-box" type="text" maxlength="30" v-on:keyup.13="login()" v-model="nickname" placeholder="input your name" />
+    <div id="btn-start" class="btn-start" v-on:click="login()">
+      <span>Start !</span>
+      <div id="connecting-img" class="connecting-img" v-bind:class="{'show':gameState==1}"></div>
+    </div>
+  </div>
+</div>
+
 <body style="overflow:-Scroll; overflow-x:hidden; overflow-y:hidden; height:100%"> 
 <canvas id="Hcanvas"></canvas>
 <canvas id="canvas" height="2000" width="2000" style="background-color:gainsboro;"></canvas>
 <script type="text/javascript" src="/socket.io/socket.io.js"></script>
 <script>
+  var pageVueData = {
+    nickname: '',
+    gameState: 0 // 0表示未开始 1表示等待连接 2表示游戏运行中
+    // other attrs ...
+  }
+  var pageVue = new Vue({
+    el: '#login-page',
+    data: pageVueData,
+    methods: {
+      login: function () {
+        if (pageVueData.gameState != 0) return;
+        pageVueData.gameState = 1;
+        // TODO:发送 pageVueData.nickname 给服务器
+        // 默认5s后拒绝登录，应移除
+        setTimeout('gameStart()', "5000");
+      }
+    }
+  });
+  // ------------以下是服务器拒绝登入后应触发的过程实例---------------
+  function accessDenied() {
+    pageVueData.nickname = '';
+    pageVueData.gameState = 0;
+  }
+  // ------------以下是服务器准许登入后应触发的过程实例---------------
+  function gameStart(nickname) {
+    $('#login-page').remove();
+    pageVueData.gameState = 2;
+    alert(pageVueData.nickname);
+  }
+
   var socket = io();
 
   var canvas = document.getElementById('canvas');
@@ -401,6 +429,7 @@
     this.experience = 0;
     this.bulletReloadInterval = 1000;
     this.maxBulletSpeed = 5;
+    this.bulletDamage = 30;
     this.regenerationRate = 10;
   }
 
@@ -502,6 +531,7 @@
     this.belong = belong;
     this.model.scaleX = 0.4;
     this.model.scaleY = 0.4;
+    this.bodyDamage = tankMap[belong].bulletDamage;
     this.bonus = 0;
   }
 
@@ -528,7 +558,7 @@
 
     function handleChange(event) {
       for(let i = 0; i < tankList.length; i++) {
-        if(checkCollision(This, tankList[i]) == true)
+        if(tankList[i] != maintk && checkCollision(This, tankList[i]) == true)
           return;
       }
       for(let i = 0; i < creepList.length; i++) {
@@ -700,6 +730,8 @@
     },
     addCreep: function(data) {
       let creep = new Creep(data[2], data[3], data[1]);
+      creep.setBodyColor('', '', Math.floor(Math.random() * 4 + 2));
+      creep.decorate(creep.armsId);
       creep.healthPoint = data[4];
       creep.maxHealthPoint = data[5];
       creep.setHealthCond(data[4] / data[5]);
@@ -791,7 +823,7 @@
     minimap.animateCoord(maintk.model.x, maintk.model.y);
     Hstage.update();
   });
-  iw.init('HSINI', 'Tank', 0, 1, 0);
+  iw.init(pageVueData.nickname, 'Tank', 0, 1, 0);
   updmenu.setItemOnShow(0, 0);
   updmenu.setItemOnShow(1, 32);
   updmenu.setItemOnShow(2, 80);
