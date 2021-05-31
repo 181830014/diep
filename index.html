@@ -52,9 +52,8 @@
       login: function () {
         if (pageVueData.gameState != 0) return;
         pageVueData.gameState = 1;
-        // TODO:发送 pageVueData.nickname 给服务器
-        // 默认5s后拒绝登录，应移除
-        setTimeout('gameStart()', "5000");
+        socket.emit('name', ['name', pageVueData.nickname]);
+        setTimeout('gameStart()', "10");
       }
     }
   });
@@ -65,9 +64,10 @@
   }
   // ------------以下是服务器准许登入后应触发的过程实例---------------
   function gameStart(nickname) {
+    // $('#login-page').style.display="none";
     $('#login-page').remove();
     pageVueData.gameState = 2;
-    alert(pageVueData.nickname);
+    // alert(pageVueData.nickname);
   }
 
   var socket = io();
@@ -142,6 +142,17 @@
     levelUpThreshold.push(i * 100 + 500);
 
   // Global part
+  function justifyPosition(obj) {
+    if(obj.model.x + obj.r * obj.model.scaleX > CANVAS_RIGHT)
+      obj.model.x = CANVAS_RIGHT - obj.r * obj.model.scaleX;
+    if(obj.model.x - obj.r * obj.model.scaleX < CANVAS_LEFT)
+      obj.model.x = CANVAS_LEFT + obj.r * obj.model.scaleX;
+    if(obj.model.y + obj.r * obj.model.scaleX > CANVAS_TOP)
+      obj.model.y = CANVAS_TOP - obj.r * obj.model.scaleX;
+    if(obj.model.y - obj.r * obj.model.scaleX < CANVAS_BOTTOM)
+      obj.model.y = CANVAS_BOTTOM + obj.r * obj.model.scaleX;
+  }
+
   function isNear(obj1, obj2) {
     if(obj1.armsId == obj2.armsId)
       return false;
@@ -186,16 +197,17 @@
         tankMap[obj2.belong].experienceUp(obj1.bonus);
     }
 
-    if(obj1 == maintk || obj2 == maintk) {
+    if(obj1.type == 2 || obj2.type == 2) {
       // TODO: maintk 碰撞动画 & 其他参数修改
-      if(banKeyBoard) return;
-      // console.log('maintk collide!');
-      let destX = maintk.model.x - maintk.xMoveSpeed * 10;
-      let destY = maintk.model.y - maintk.yMoveSpeed * 10;
-      banKeyboard = true       // 禁止使用键盘移动
-      socket.emit('collide', ['collide', this.armsId, destX, destY]);
-      createjs.Tween.get(maintk.model).to({x: destX, y: destY}, 500).call(handleComplete);
-      function handleComplete() {banKeyboard = false;}
+      let creep = null, tank = null;
+      if(obj1.type == 2) creep = obj1, tank = obj2;
+      else if(obj2.type == 2) creep = obj2, tank = obj1;
+      console.log('collide = ', creep.armsId);
+      if(creep) {
+        let destX = creep.model.x + tank.xMoveSpeed * 10;
+        let destY = creep.model.y + tank.yMoveSpeed * 10;
+        socket.emit('collide', ['collide', creep.armsId, destX, destY]);
+      }
     }
 
     return true;
@@ -220,7 +232,7 @@
     this.bodyStrokeColor = '#000';
     this.bodyFillColor = '#000';
     this.r = 0;
-    this.name = 'Tank';
+    this.name = '';
 
     this.setBodyColor('', '', 1);
     this.decorate(this.armsId);
@@ -369,7 +381,7 @@
     this.xMoveSpeed = 0;
     this.yMoveSpeed = 0;
     this.maxMoveSpeed = 5;
-    this.bodyDamage = 30;
+    this.bodyDamage = 1;
 
     this.nearTank = [];
     this.nearCreep = [];
@@ -486,10 +498,7 @@
 
     this.model.x += this.xMoveSpeed;
     this.model.y += this.yMoveSpeed;
-    if(this.model.x > CANVAS_RIGHT) this.model.x = CANVAS_RIGHT;
-    if(this.model.x < CANVAS_LEFT) this.model.x = CANVAS_LEFT;
-    if(this.model.y > CANVAS_TOP) this.model.y = CANVAS_TOP;
-    if(this.model.y < CANVAS_BOTTOM) this.model.y = CANVAS_BOTTOM;
+    justifyPosition(this);
 
     socket.emit('move', ['move', this.armsId, this.model.x, this.model.y]);
 
@@ -581,6 +590,7 @@
   // Creep part
   function Creep (modelX, modelY, armsId = 0) {
     GeneralModel.call(this, modelX, modelY, armsId);
+	if(this.armsId)
     this.type = 2;
   }
 
@@ -682,11 +692,13 @@
 
   var serverEvent = {
     control: function(data) {
-      console.log('control: maintk id = ', data[1]);
+      // console.log('control: maintk id = ', data[1]);
       for(let i = 0; i < tankList.length; i++)
         if(tankList[i].armsId == data[1])
           maintk = tankList[i];
       if(!maintk) alert('ERROR: NO TANK!!!');
+      maintk.name = data[2]
+      iw.init(maintk.name, 'Tank', 0, 1, 0);
       createjs.Ticker.addEventListener('tick', function() {
         stage.x = (BODY_WIDTH >> 1) - maintk.model.x;
         stage.y = (BODY_HEIGHT >> 1) - maintk.model.y;
@@ -712,12 +724,22 @@
       // rule: who fire the bullet, who check the collision.
       console.log('bulletId = ', data[3]);
       let bullet = new Bullet(data[1], data[2], data[3], data[4]);
+      if(data[4] != maintk.armsId) {
+        bullet.setBodyColor('', '', 5);
+        bullet.decorate(bullet.armsId);
+      }
       bullet.xMoveSpeed = data[5];
       bullet.yMoveSpeed = data[6];
       bulletList.push(bullet);
       bulletMap[data[3]] = bullet;
       stage.addChild(bullet.model);
       bullet.bulletMove();
+    },
+    collide: function(data) {
+      // ['collide', armsId, destX, destY]
+      console.log(data[1], 'is collided.');
+      let obj = find(data[1]), destX = data[2], destY = data[3];
+      createjs.Tween.get(obj.model).to({x: destX, y: destY}, 100);
     },
     addTank: function(data) {
       let tank = new Tank(data[2], data[3], data[1]);
@@ -800,6 +822,7 @@
   socket.on('addCreep', serverMessage);
   socket.on('control', serverMessage);
   socket.on('upgrade', serverMessage);
+  socket.on('collide', serverMessage);
   socket.on('killed', serverMessage);
   socket.on('HPdrop', serverMessage);
   socket.on('move', serverMessage);
@@ -813,8 +836,6 @@
   var minimap = new MiniMap(BODY_WIDTH - 200, BODY_HEIGHT - 200, 2000, './images/map_172x172.png');
   var iw = new InfoBar(BODY_WIDTH >> 1, BODY_HEIGHT - 40);
   var updmenu = new UpgradeMenu(10, 10);
-  var tankX = 500;
-  var tankY = 500;
   var tic = 0;
   Hstage.addChild(minimap.model, iw.model);
   createjs.Ticker.framerate = FRAME_RATE;
@@ -823,11 +844,14 @@
     minimap.animateCoord(maintk.model.x, maintk.model.y);
     Hstage.update();
   });
-  iw.init(pageVueData.nickname, 'Tank', 0, 1, 0);
   updmenu.setItemOnShow(0, 0);
   updmenu.setItemOnShow(1, 32);
   updmenu.setItemOnShow(2, 80);
   updmenu.setItemOnShow(3, 96);
+
+  var border = new createjs.Shape();
+  border.graphics.ss(4).s('#727272').dr(50, 50, 1900, 1900);
+  stage.addChild(border);
 
 </script>
 </body>
