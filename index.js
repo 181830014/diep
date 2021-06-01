@@ -33,17 +33,17 @@ io.on('connection', function(socket){
     ++uid;
     let tank = {
       x:Math.random() * 1530, y:Math.random() * 720, id: (uid << 10) + (1 << 4),
-      hp: 100, maxhp: 100, bodyDamage: 30,
+      hp: 100, maxhp: 100, bodyDamage: 1,
     };
     socket.tank = tank;
 
     for(let i = 0; i < tankPool.length; i++)  // 通知全体坦克
-      broadcast('addTank', ['addTank', tank.id, tank.x, tank.y, tank.hp, tank.maxhp]);
+      broadcast('addTank', ['addTank', tank.id, tank.x, tank.y, tank.hp, tank.maxhp, tank.bodyDamage]);
     tankPool.push(socket);
 
     for(let i = 0; i < tankPool.length; i++)             // 全体坦克通知自己
       socket.emit('addTank', ['addTank', tankPool[i].tank.id, tankPool[i].tank.x, tankPool[i].tank.y,
-        tankPool[i].tank.hp, tankPool[i].tank.maxhp]);
+        tankPool[i].tank.hp, tankPool[i].tank.maxhp, tankPool[i].tank.bodyDamage]);
     for(let i = 0; i < creepPool.length; i++)  // 全体野怪通知自己
       socket.emit('addCreep', ['addCreep', creepPool[i].id, creepPool[i].x, creepPool[i].y,
         creepPool[i].hp, creepPool[i].maxhp]);
@@ -54,6 +54,7 @@ io.on('connection', function(socket){
   });
 
   socket.on('disconnect', function() {
+    if(!socket.tank) return;
     var des = socket.tank.id;
     findDelete(socket.tank.id);
     broadcast('killed', ['killed', socket.tank.id]);
@@ -97,6 +98,9 @@ io.on('connection', function(socket){
     if(data[2] == 1) {
       obj.maxhp += 20;
       obj.hp += 20;
+    }
+    else if(data[2] == 2) { //bodyDamage
+      obj.bodyDamage += 10;
     }
     else if(data[2] == 7)
       obj.id = obj.id & 0xfc00 | data[3];

@@ -1,0 +1,128 @@
+{
+	"Tank" : {
+		"name" : "Tank",
+		"armsId" : 16,
+		"foundation" : {
+			"Health Regen" :	1,
+			"Max Health" :		1,
+			"Body Damage" :		1,
+			"Bullet Speed" :	1,
+			"Bullet Damage" :	1,
+			"Reload" :			1,
+			"Movement Speed":	1
+		},
+		"upgrades" : ["Sniper", "Guard", "Twin", "Smasher"]
+	},
+	"Sniper" : {
+		"name" : "Sniper",
+		"armsId" : 32,
+		"foundation" : {
+			"Health Regen" :	1,
+			"Max Health" :		1,
+			"Body Damage" :		1,
+			"Bullet Speed" :	1,
+			"Bullet Damage" :	1,
+			"Reload" :			1,
+			"Movement Speed":	1
+		},
+		"upgrades" : ["Hunter"]
+	},
+	"Guard" : {
+		"name" : "Guard",
+		"armsId" : 48,
+		"foundation" : {
+			"Health Regen" :	1,
+			"Max Health" :		1,
+			"Body Damage" :		1,
+			"Bullet Speed" :	1,
+			"Bullet Damage" :	1,
+			"Reload" :			1,
+			"Movement Speed":	1
+		},
+		"upgrades" : ["Quad Tank"]
+	},
+	"Twin" : {
+		"name" : "Twin",
+		"armsId" : 80,
+		"foundation" : {
+			"Health Regen" :	1,
+			"Max Health" :		1,
+			"Body Damage" :		1,
+			"Bullet Speed" :	1,
+			"Bullet Damage" :	1,
+			"Reload" :			1,
+			"Movement Speed":	1
+		},
+		"upgrades" : ["Triple Shot"]
+	},
+	"Smasher" : {
+		"name" : "Smasher",
+		"armsId" : 144,
+		"foundation" : {
+			"Health Regen" :	1,
+			"Max Health" :		1,
+			"Body Damage" :		1,
+			"Bullet Speed" :	1,
+			"Bullet Damage" :	1,
+			"Reload" :			1,
+			"Movement Speed":	1
+		},
+		"upgrades" : ["Lindmine"]
+	},
+	"Hunter" : {
+		"name" : "Hunter",
+		"armsId" : 128,
+		"foundation" : {
+			"Health Regen" :	1,
+			"Max Health" :		1,
+			"Body Damage" :		1,
+			"Bullet Speed" :	1,
+			"Bullet Damage" :	1,
+			"Reload" :			1,
+			"Movement Speed":	1
+		},
+		"upgrades" : []
+	},
+	"Quad Tank" : {
+		"name" : "Quad Tank",
+		"armsId" : 112,
+		"foundation" : {
+			"Health Regen" :	1,
+			"Max Health" :		1,
+			"Body Damage" :		1,
+			"Bullet Speed" :	1,
+			"Bullet Damage" :	1,
+			"Reload" :			1,
+			"Movement Speed":	1
+		},
+		"upgrades" : []
+	},
+	"Triple Shot" : {
+		"name" : "Triple Shot",
+		"armsId" : 96,
+		"foundation" : {
+			"Health Regen" :	1,
+			"Max Health" :		1,
+			"Body Damage" :		1,
+			"Bullet Speed" :	1,
+			"Bullet Damage" :	1,
+			"Reload" :			1,
+			"Movement Speed":	1
+		},
+		"upgrades" : []
+	},
+	"Lindmine" : {
+		"name" : "Lindmine",
+		"armsId" : 160,
+		"foundation" : {
+			"Health Regen" :	1,
+			"Max Health" :		1,
+			"Body Damage" :		1,
+			"Bullet Speed" :	1,
+			"Bullet Damage" :	1,
+			"Reload" :			1,
+			"Movement Speed":	1
+		},
+		"upgrades" : []
+	}
+}

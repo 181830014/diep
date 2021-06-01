@@ -242,9 +242,9 @@ function UpgradeMenu(modelX, modelY) {
         this.slots[i].x = (i & 1) ? 115 : 5;
         this.slots[i].y = 60 + (i >> 1) * 110;
         let frame = new createjs.Shape();
-        let item = new BaseModel(50, 45, undefined, 16);
+        let item = new BaseModel(50, 45, 16);
         let text = new createjs.Text('Tank', 'bold 16px Ubuntu', '#ffffff');
-            // TODO: text.text = item.model.namestr
+        text.text = item.model.namestr
         frame.graphics.ss(4).s('#616161').lf(frameCols[i], [0.4, 0.6], 0, 2, 0, 96).rr(2, 2, 96, 96, 4);
         item.model.scaleX = item.model.scaleY = 0.5;
         createjs.Ticker.addEventListener('tick', function() {
@@ -274,7 +274,7 @@ function UpgradeMenu(modelX, modelY) {
     this.model.addChild(this.ignoreButton);
 }
 
-UpgradeMenu.prototype.setItemOnShow = function(slotId, armsId) {
+UpgradeMenu.prototype.setItemOnShow = function(slotId, armsId, namestr) {
     let item = new BaseModel(50, 45, (armsId & 0xfff3) | 0x4);
     item.model.scaleX = item.model.scaleY = 0.5;
     createjs.Ticker.addEventListener('tick', function() {
@@ -282,6 +282,7 @@ UpgradeMenu.prototype.setItemOnShow = function(slotId, armsId) {
     });
     this.slots[slotId].removeChildAt(1);
     this.slots[slotId].addChildAt(item.model, 1);
+    this.slots[slotId].getChildAt(2).text = namestr;
     this.slots[slotId].armsId = armsId;
 }
 

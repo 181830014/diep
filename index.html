@@ -136,6 +136,7 @@
   var tankMap = new Object();
   var creepMap = new Object();
   var bulletMap = new Object();
+  var collideTime = new Object();
 
   var levelUpThreshold = [0];
   for(let i = 1; i <= 30; i++)
@@ -175,13 +176,23 @@
   }
 
   function checkCollision(obj1, obj2) { // 碰撞后修改参数
+    
+    let id1 = Math.min(obj1.armsId, obj2.armsId);
+    let id2 = Math.max(obj1.armsId, obj2.armsId);
+    let nowTime = new Date();
+    let preTime = collideTime[String(id1) + String(id2)];
+    if(!preTime) preTime = nowTime - 10000;
+    if(nowTime - preTime < 50) return;
+    collideTime[String(id1) + String(id2)] = nowTime;
 
     res = isCollided(obj1, obj2);
     if(res == false)
       return false;
 
+    console.log('coooooo!');
     obj1.healthDrop(obj2.bodyDamage);
     obj2.healthDrop(obj1.bodyDamage);
+    
     if(obj2.healthPoint <= 0)
     {
       if(obj1.type == 0)       // tank
@@ -234,12 +245,10 @@
     this.r = 0;
     this.name = '';
 
+    this.model.addChild(this.heads, this.body, this.health, this.status);
+  //  this.model.cache(-80, -80, 160, 160);
     this.setBodyColor('', '', 1);
     this.decorate(this.armsId);
-    this.model.addChild(this.heads);
-    this.model.addChild(this.body);
-    this.model.addChild(this.health);
-    this.model.addChild(this.status);
   }
 
   BaseModel.prototype.setBodyColor = function (strokeColor, fillColor, builtInColorStyle = 0) {
@@ -273,6 +282,7 @@
     }
     this.setHealthCond(1.0);
     this.armsId = armsId;
+  //  this.model.updateCache();
   }
 
   BaseModel.prototype.headDecorate = function (headId) {
@@ -282,17 +292,17 @@
     switch(headId) {
       case 0: // 无炮管
         break;
-      case 1: // 矩形炮管 * 1
+      case 1: // normal
         headShapes.push(new createjs.Shape());
         this.headOuterRadius.push(60);
         headShapes[0].graphics.ss(4).s('#727272').f('#999999').dr(0, -15, 60, 30);
         break;
-      case 2: // 矩形长炮管 * 1
+      case 2: // Sniper
         headShapes.push(new createjs.Shape());
         this.headOuterRadius.push(70);
         headShapes[0].graphics.ss(4).s('#727272').f('#999999').dr(0, -15, 70, 30);
         break;
-      case 3: // 矩形炮管 * 1 + 矩形短炮管 * 1
+      case 3: // Flank Guard
         headShapes.push(new createjs.Shape(), new createjs.Shape());
         this.headOuterRadius.push(60, 45);
         headShapes[0].graphics.ss(4).s('#727272').f('#999999').dr(0, -15, 60, 30);
@@ -305,13 +315,13 @@
         headShapes[0].graphics.ss(4).s('#727272').f('#999999');
         headShapes[0].graphics.mt(-30, 0).lt(60, -20).mt(58, -20).lt(58, 20).mt(60, 20).lt(-30, 0);
         break;
-      case 5: // 双发炮管 * 1
+      case 5: // twin
         headShapes.push(new createjs.Shape(), new createjs.Shape());
         this.headOuterRadius.push(60, 60);
         headShapes[0].graphics.ss(4).s('#727272').f('#999999').dr(0, -20, 60, 17);
         headShapes[1].graphics.ss(4).s('#727272').f('#999999').dr(0, 3, 60, 17);
         break;
-      case 6: // 三发炮管 * 1
+      case 6: // triple
         headShapes.push(new createjs.Shape(), new createjs.Shape(), new createjs.Shape());
         this.headOuterRadius.push(50, 50, 50);
         headShapes[0].graphics.ss(4).s('#727272').f('#999999').dr(0, -10, 50, 20);
@@ -331,6 +341,28 @@
         headShapes[3].graphics.ss(4).s('#727272').f('#999999').dr(0, -15, 60, 30);
         headShapes[3].rotation = 270;
         break;
+      case 8: // Hunter
+        headShapes.push(new createjs.Shape());
+        this.headOuterRadius.push(70);
+        headShapes[0].graphics.ss(4).s('#727272').f('#999999').dr(0, -13, 70, 26);
+        headShapes[0].graphics.ss(4).s('#727272').f('#999999').dr(0, -18, 60, 36);
+        break;
+      case 9: // Smasher
+        headShapes.push(new createjs.Shape());
+        headShapes[0].graphics.ss(4).s('#727272').f('#727272').dp(0, 0, 36, 6, 0, 0);
+        createjs.Ticker.addEventListener('tick', $.proxy(function() {
+                this.heads.rotation += 1;
+            }, this));
+        this.r = 34; // XXX:
+        break;
+      case 10: // Landmine
+        headShapes.push(new createjs.Shape());
+        headShapes[0].graphics.ss(4).s('#727272').f('#727272').dp(0, 0, 36, 12, 0.2, 0);
+        createjs.Ticker.addEventListener('tick', $.proxy(function() {
+                this.heads.rotation += 1;
+            }, this));
+        this.r = 34; // XXX:
+        break;
       default:
         alert('How can you reach here H?');
         break;
@@ -339,6 +371,7 @@
     for(let i = 0; i < headShapes.length; i++)
       this.heads.addChild(headShapes[i]);
     this.heads.scaleX = this.heads.scaleY = 1;
+  //  this.model.updateCache();
   }
 
   BaseModel.prototype.bodyDecorate = function (bodyId) {
@@ -360,6 +393,7 @@
         alert('How can you reach here B?'); break;
     }
     this.body.scaleX = this.body.scaleY = 1;
+  //  this.model.updateCache();
   }
 
   BaseModel.prototype.setHealthCond = function (ratio) {
@@ -369,6 +403,7 @@
       this.health.graphics.clear().f('#555555').rr(-30, this.r  + 10, 60, 8, 4);
       this.health.graphics.f('#85e37d').rr(-28, this.r  + 12, 56 * ratio, 4, 2);
     }
+  //  this.model.updateCache();
   }
 
   // GeneralModel part
@@ -396,13 +431,9 @@
     if(this.healthPoint < 0)
       this.healthPoint = 0;
     socket.emit('HPdrop', ['HPdrop', this.armsId, this.healthPoint]);
-    this.setHealthCond(this.healthPoint / this.maxHealthPoint);
+    // this.setHealthCond(this.healthPoint / this.maxHealthPoint);
     if(this.healthPoint <= 0) {
-      createjs.Tween.removeTweens(this.model);
-      stage.removeChild(this.model);
-      // console.log('send KILL info');
       socket.emit('killed', ['killed', this.armsId]);
-      findDelete(this.armsId);
     }
   }
 
@@ -461,6 +492,17 @@
       Hstage.addChild(updmenu.model);
       updmenu.slipIn();
     }
+    else if(this.level == 4) {
+      updmenu.slipOut();
+      switch((this.armsId >> 4) & 63) {
+        case 2: for(let i=0;i<4;i++) updmenu.setItemOnShow(i, 128, 'Hunter'); break;
+        case 3: for(let i=0;i<4;i++) updmenu.setItemOnShow(i, 112, 'Quad'); break;
+        case 5: for(let i=0;i<4;i++) updmenu.setItemOnShow(i, 96, 'Triple'); break;
+        case 9: for(let i=0;i<4;i++) updmenu.setItemOnShow(i, 160, 'Lindmine'); break;
+        default: return;
+      }
+      updmenu.slipIn();
+    }
   }
 
   Tank.prototype.experienceUp = function(exp) {
@@ -516,7 +558,7 @@
 
   Tank.prototype.fireBullet = function() {
     if(this.healthPoint <= 0) return;
-    for(let i = 0; i < this.heads.numChildren; i++) {
+    for(let i = 0; i < this.headOuterRadius.length; i++) {
       let angle = tools.deg2Rad(this.heads.rotation + this.heads.getChildAt(i).rotation)
       let bulletX = this.model.x + this.headOuterRadius[i] * Math.cos(angle);
       let bulletY = this.model.y + this.headOuterRadius[i] * Math.sin(angle);
@@ -624,6 +666,7 @@
   }
 
   document.onmousemove = function(ev) {
+    if(!maintk) return;
     var mEvent = ev || window.event;
     let x = Math.round(mEvent.clientX - cvsBox.left - stage.x);
     let y = Math.round(mEvent.clientY - cvsBox.top - stage.y);
@@ -634,7 +677,7 @@
 
   var preTime = new Date();
   document.onmousedown = function(ev) {
-    var curTime = new Date();
+    let curTime = new Date();
     if(curTime - preTime > maintk.bulletReloadInterval) {
       maintk.fireBullet();
       preTime = curTime;
@@ -688,7 +731,7 @@
       serverEvent[data[0]](data);
   }
 
-  var maintk;
+  var maintk = null;
 
   var serverEvent = {
     control: function(data) {
@@ -737,14 +780,16 @@
     },
     collide: function(data) {
       // ['collide', armsId, destX, destY]
-      console.log(data[1], 'is collided.');
       let obj = find(data[1]), destX = data[2], destY = data[3];
-      createjs.Tween.get(obj.model).to({x: destX, y: destY}, 100);
+      if(!obj) return;
+      createjs.Tween.get(obj.model).to({x: destX, y: destY}, 70);
     },
     addTank: function(data) {
+      console.log('addtanks bodyDamage = ', data[6]);
       let tank = new Tank(data[2], data[3], data[1]);
       tank.healthPoint = data[4];
       tank.maxHealthPoint = data[5];
+      tank.bodyDamage = data[6];
       tank.setHealthCond(data[4] / data[5]);
       tankList.push(tank);
       tankMap[tank.armsId] = tank;
@@ -762,8 +807,7 @@
       stage.addChild(creep.model);
     },
     killed: function(data) {
-      let obj = 0;
-      console.log('dead id = ', data[1]);
+      let obj = null;
       for(let i = 0; i < tankList.length; i++)
         if(tankList[i].armsId == data[1]) {
           obj = tankList[i];
@@ -783,15 +827,18 @@
           break;
         }
       if(!obj) return;
-      console.log(obj, ' is killed.')
+      console.log(obj, ' is killed.');
       stage.removeChild(obj.model);
       createjs.Tween.removeTweens(obj.model);
-      // if(obj.armsId == maintk.armsId)
-      //   alert('YOU DIE');
+      if(obj.armsId == maintk.armsId) {
+        alert('YOU DIE');
+        maintk = null;
+      }
     },
     HPdrop: function(data) {
       let obj = find(data[1]);
       if(!obj) return;
+      console.log(data[1], ': HP drop');
       obj.healthPoint = data[2];
       obj.setHealthCond(obj.healthPoint / obj.maxHealthPoint);
     },
@@ -835,7 +882,6 @@
   var bm = new BoostMenu(0, BODY_HEIGHT - 200);
   var minimap = new MiniMap(BODY_WIDTH - 200, BODY_HEIGHT - 200, 2000, './images/map_172x172.png');
   var iw = new InfoBar(BODY_WIDTH >> 1, BODY_HEIGHT - 40);
-  var updmenu = new UpgradeMenu(10, 10);
   var tic = 0;
   Hstage.addChild(minimap.model, iw.model);
   createjs.Ticker.framerate = FRAME_RATE;
@@ -844,11 +890,12 @@
     minimap.animateCoord(maintk.model.x, maintk.model.y);
     Hstage.update();
   });
-  updmenu.setItemOnShow(0, 0);
-  updmenu.setItemOnShow(1, 32);
-  updmenu.setItemOnShow(2, 80);
-  updmenu.setItemOnShow(3, 96);
-
+  var updmenu = new UpgradeMenu(10, 10);
+  updmenu.setItemOnShow(0, 32, 'Sniper');
+  updmenu.setItemOnShow(1, 48, 'Guard');
+  updmenu.setItemOnShow(2, 80, 'Twin');
+  updmenu.setItemOnShow(3, 144, 'Smasher');
+  
   var border = new createjs.Shape();
   border.graphics.ss(4).s('#727272').dr(50, 50, 1900, 1900);
   stage.addChild(border);
