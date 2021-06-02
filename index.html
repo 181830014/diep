@@ -182,7 +182,7 @@
     let nowTime = new Date();
     let preTime = collideTime[String(id1) + String(id2)];
     if(!preTime) preTime = nowTime - 10000;
-    if(nowTime - preTime < 50) return;
+    if(nowTime - preTime < 65) return;
     collideTime[String(id1) + String(id2)] = nowTime;
 
     res = isCollided(obj1, obj2);
@@ -433,6 +433,8 @@
     socket.emit('HPdrop', ['HPdrop', this.armsId, this.healthPoint]);
     // this.setHealthCond(this.healthPoint / this.maxHealthPoint);
     if(this.healthPoint <= 0) {
+      stage.removeChild(this.model);
+      createjs.Tween.removeTweens(this.model);
       socket.emit('killed', ['killed', this.armsId]);
     }
   }
