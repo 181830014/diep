@@ -8,7 +8,7 @@ var
     bid = 0,
     cid = 0;
 
-const MAX_CREEP_COUNT = 15;
+const MAX_CREEP_COUNT = 20;
 const CANVAS_WIDTH = 2000;
 const CANVAS_HEIGHT = 2000;
 
@@ -29,6 +29,7 @@ app.get('/', function(req, res){
 
 io.on('connection', function(socket){
 
+  socket.tank = null;
   socket.on('name', function(data) {
     ++uid;
     let tank = {
@@ -63,6 +64,7 @@ io.on('connection', function(socket){
 
   socket.on('move', function(data) {
     let tk = find(data[1]);
+    if(!tk) return;
     tk.x = data[2], tk.y = data[3];
     broadcast('move', data, data[1]);
   });
@@ -79,8 +81,9 @@ io.on('connection', function(socket){
   });
 
   socket.on('collide', function(data) {
-    broadcast('collide', data);
     let creep = find(data[1]);
+    if(!creep) return;
+    broadcast('collide', data);
     creep.x = data[2], creep.y = data[3];
   })
 
@@ -100,7 +103,7 @@ io.on('connection', function(socket){
       obj.hp += 20;
     }
     else if(data[2] == 2) { //bodyDamage
-      obj.bodyDamage += 10;
+      obj.bodyDamage += 1;
     }
     else if(data[2] == 7)
       obj.id = obj.id & 0xfc00 | data[3];
@@ -132,7 +135,7 @@ function find(id) {
   for(let i = 0; i < creepPool.length; i++)
     if(creepPool[i].id == id)
       return creepPool[i];
-  return 0;
+  return null;
 }
 
 function findDelete(id) {

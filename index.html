@@ -217,6 +217,9 @@
       if(creep) {
         let destX = creep.model.x + tank.xMoveSpeed * 10;
         let destY = creep.model.y + tank.yMoveSpeed * 10;
+        let tempCreep = new Creep(destX, destY, creep.armsId);
+        justifyPosition(tempCreep);
+        destX = tempCreep.model.x, destY = tempCreep.model.y;
         socket.emit('collide', ['collide', creep.armsId, destX, destY]);
       }
     }
@@ -495,7 +498,6 @@
       updmenu.slipIn();
     }
     else if(this.level == 4) {
-      updmenu.slipOut();
       switch((this.armsId >> 4) & 63) {
         case 2: for(let i=0;i<4;i++) updmenu.setItemOnShow(i, 128, 'Hunter'); break;
         case 3: for(let i=0;i<4;i++) updmenu.setItemOnShow(i, 112, 'Quad'); break;
@@ -742,7 +744,9 @@
         if(tankList[i].armsId == data[1])
           maintk = tankList[i];
       if(!maintk) alert('ERROR: NO TANK!!!');
-      maintk.name = data[2]
+      maintk.name = data[2];
+      maintk.setBodyColor('', '', 1);
+      maintk.decorate(maintk.armsId);
       iw.init(maintk.name, 'Tank', 0, 1, 0);
       createjs.Ticker.addEventListener('tick', function() {
         stage.x = (BODY_WIDTH >> 1) - maintk.model.x;
@@ -793,6 +797,8 @@
       tank.maxHealthPoint = data[5];
       tank.bodyDamage = data[6];
       tank.setHealthCond(data[4] / data[5]);
+      tank.setBodyColor('', '', 5);
+      tank.decorate(tank.armsId);
       tankList.push(tank);
       tankMap[tank.armsId] = tank;
       stage.addChild(tank.model);
@@ -833,7 +839,7 @@
       stage.removeChild(obj.model);
       createjs.Tween.removeTweens(obj.model);
       if(obj.armsId == maintk.armsId) {
-        alert('YOU DIE');
+        alert('YOU DIE!');
         maintk = null;
       }
     },
@@ -851,7 +857,7 @@
         case 0: (tk.regenerationRate += 1); break;
         case 1: (tk.maxHealthPoint += 20); (tk.healthPoint += 20);
           tk.setHealthCond(tk.healthPoint/tk.maxHealthPoint); break;
-        case 2: (tk.bodyDamage += 10); break;
+        case 2: (tk.bodyDamage += 1); break;
         case 3: (tk.maxBulletSpeed += 1); break;
         case 4: (tk.bulletDamage += 10); break;
         case 5: (tk.bulletReloadInterval -= 80); break;
