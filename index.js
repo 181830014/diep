@@ -8,7 +8,7 @@ var
     bid = 0,
     cid = 0;
 
-const MAX_CREEP_COUNT = 20;
+const MAX_CREEP_COUNT = 15;
 const CANVAS_WIDTH = 2000;
 const CANVAS_HEIGHT = 2000;
 
@@ -198,15 +198,15 @@ function generate_coordinate() {
   {
     flag = 0;
     x = Math.random() * (CANVAS_WIDTH - 200) + 100;
-    y = Math.random() * (CANVAS_WIDTH - 200) + 100;
+    y = Math.random() * (CANVAS_HEIGHT - 200) + 100;
     for(let i = 0; i < tankPool.length; i++)
-      if(Math.abs(tankPool[i].tank.x - x) < 80 || Math.abs(tankPool[i].tank.y - y) < 80)
+      if(Math.abs(tankPool[i].tank.x - x) < 70 || Math.abs(tankPool[i].tank.y - y) < 70)
       {flag=1;break;}
     for(let i = 0; i < creepPool.length; i++)
-      if(Math.abs(creepPool[i].x - x) < 80 || Math.abs(creepPool[i].y - y) < 80)
+      if(Math.abs(creepPool[i].x - x) < 70 || Math.abs(creepPool[i].y - y) < 70)
       {flag=1;break;}
     for(let i = 0; i < bulletPool.length; i++)
-      if(Math.abs(bulletPool[i].x - x) < 80 || Math.abs(bulletPool[i].y - y) < 80)
+      if(Math.abs(bulletPool[i].x - x) < 70 || Math.abs(bulletPool[i].y - y) < 70)
       {flag=1;break;}
   }
   return [x, y];
