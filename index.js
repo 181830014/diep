@@ -7,11 +7,13 @@ var
     uid = 0,
     bid = 0,
     cid = 0;
+    tid = 0;
 
 const MAX_CREEP_COUNT = 15;
 const CANVAS_WIDTH = 2000;
 const CANVAS_HEIGHT = 2000;
 
+tripPool = new Array();
 tankPool = new Array();
 creepPool = new Array();
 bulletPool = new Array();
@@ -34,20 +36,20 @@ io.on('connection', function(socket){
     ++uid;
     let tank = {
       x:Math.random() * 1530, y:Math.random() * 720, id: (uid << 10) + (1 << 4),
-      hp: 100, maxhp: 100, bodyDamage: 1,
+      hp: 100, maxhp: 100, bodyDamage: 1, transparent: 1
     };
     socket.tank = tank;
 
     for(let i = 0; i < tankPool.length; i++)  // 通知全体坦克
-      broadcast('addTank', ['addTank', tank.id, tank.x, tank.y, tank.hp, tank.maxhp, tank.bodyDamage]);
+      broadcast('addTank', ['addTank', tank.id, tank.x, tank.y, tank.hp, tank.maxhp, tank.bodyDamage, tank.transparent]);
     tankPool.push(socket);
 
     for(let i = 0; i < tankPool.length; i++)             // 全体坦克通知自己
       socket.emit('addTank', ['addTank', tankPool[i].tank.id, tankPool[i].tank.x, tankPool[i].tank.y,
-        tankPool[i].tank.hp, tankPool[i].tank.maxhp, tankPool[i].tank.bodyDamage]);
+        tankPool[i].tank.hp, tankPool[i].tank.maxhp, tankPool[i].tank.bodyDamage, tankPool[i].tank.transparent]);
     for(let i = 0; i < creepPool.length; i++)  // 全体野怪通知自己
       socket.emit('addCreep', ['addCreep', creepPool[i].id, creepPool[i].x, creepPool[i].y,
-        creepPool[i].hp, creepPool[i].maxhp]);
+        creepPool[i].hp, creepPool[i].maxhp, creepPool[i].bodyDamage]);
 
     socket.emit('control', ['control', socket.tank.id, data[1]]);
 
@@ -73,6 +75,10 @@ io.on('connection', function(socket){
     broadcast('turn', data, data[1]);
   });
 
+  socket.on('pturn', function(data) {
+    broadcast('pturn', data, data[1]);
+  });
+
   socket.on('fire', function(data) {
     ++ bid;
     data[3] = (bid << 10) + 4;   // 01 00
@@ -80,11 +86,29 @@ io.on('connection', function(socket){
     broadcast('fire', data);
   });
 
+  socket.on('trip', function(data) {
+    ++ tid;
+    data[3] = (tid << 10) + 12;   // 11 00
+    let curTime = new Date();
+    let trip = {id: data[3], x: data[1], y: data[2], hp: 1, maxhp: 1, 
+      bodyDamage: data[5], startTime: curTime};
+    creepPool.push(trip);
+    broadcast('trip', data);
+  });
+
   socket.on('collide', function(data) {
     let creep = find(data[1]);
     if(!creep) return;
     broadcast('collide', data);
     creep.x = data[2], creep.y = data[3];
+  })
+
+  socket.on('transparent', function(data) {
+    console.log('trans: ', data[1]);
+    let tk = find(data[1]);
+    if(!tk) return;
+    broadcast('transparent', data, data[1]);
+    tk.transparent = data[2];
   })
 
   socket.on('HPdrop', function(data) {
@@ -199,6 +223,7 @@ function generate_coordinate() {
     flag = 0;
     x = Math.random() * (CANVAS_WIDTH - 200) + 100;
     y = Math.random() * (CANVAS_HEIGHT - 200) + 100;
+    return [x, y];
     for(let i = 0; i < tankPool.length; i++)
       if(Math.abs(tankPool[i].tank.x - x) < 70 || Math.abs(tankPool[i].tank.y - y) < 70)
       {flag=1;break;}
@@ -213,20 +238,35 @@ function generate_coordinate() {
 }
 
 function addCreep() {
-  if(creepPool.length == MAX_CREEP_COUNT)
+  let count = 0;
+  for(let i = 0; i < creepPool.length; i++)
+    if((creepPool[i].id >> 2 & 3) == 2)
+      count ++;
+  if(count == MAX_CREEP_COUNT)
     return;
   ++cid;
   let coordinate = generate_coordinate();
   let creep = {
     x:coordinate[0], y:coordinate[1], id: (cid << 10) + 8 + Math.floor(Math.random() * 4),
-    hp: 100, maxhp: 100
+    hp: 100, maxhp: 100, bodyDamage: 1
   };
   creepPool.push(creep);
   console.log('addCreep: id = ', creep.id);
-  broadcast('addCreep', ['addCreep', creep.id, creep.x, creep.y, creep.hp, creep.maxhp]);
+  broadcast('addCreep', ['addCreep', creep.id, creep.x, creep.y, creep.hp, creep.maxhp, creep.bodyDamage]);
 }
-
 setInterval(addCreep, 5000);
+
+function clearTrip() {
+  let curTime = new Date();
+  for(let i = 0; i < creepPool.length; i++)
+    if((creepPool[i].id >> 2 & 3) == 3)
+    {
+      let trip = creepPool[i];
+      if(curTime - trip.startTime >= 20000)
+        broadcast('killed', ['killed', trip.id]);
+    }
+}
+setInterval(clearTrip, 1000);
 
 http.listen(3030, function(){
   console.log('listening on *:3030');

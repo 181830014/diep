@@ -11,14 +11,14 @@
   	// 忽略ctrl+滚轮缩放事件
   	// others
 	window.addEventListener('mousewheel', function(event) {
-	    if (event.ctrlKey === true || event.metaKey) {
-	          event.preventDefault();
-	    }
+	  if (event.ctrlKey === true || event.metaKey) {
+	    event.preventDefault();
+	  }
 	}, {passive: false});
 	// firefox
 	window.addEventListener('DOMMouseScroll', function(event) {
 		if (event.ctrlKey === true || event.metaKey) {
-		    event.preventDefault();
+		  event.preventDefault();
 		}
 	}, {passive: false}); 
   </script>
@@ -133,6 +133,7 @@
   var tankList = [];
   var creepList = [];
   var bulletList = [];
+  var tripList = [];
   var tankMap = new Object();
   var creepMap = new Object();
   var bulletMap = new Object();
@@ -159,11 +160,11 @@
       return false;
     let x1 = obj1.model.x, y1 = obj1.model.y;
     let x2 = obj2.model.x, y2 = obj2.model.y;
-    return Math.abs(y2 - y1) <= (STAGE_HEIGHT >> 1) &&
-            Math.abs(x2 - x1) <= (STAGE_WIDTH >> 1);
+    return Math.abs(y2 - y1) <= (BODY_HEIGHT >> 1) &&
+            Math.abs(x2 - x1) <= (BODY_WIDTH >> 1);
   }
 
-  function isCollided(obj1, obj2) {  // 判断两物块是否碰撞
+  function isCollided(obj1, obj2) {
     if(obj1.armsId == obj2.armsId)
       return false;
     if(obj1.type == 1 && obj2.type == 1)
@@ -175,7 +176,7 @@
     return dis <= sumr * sumr;
   }
 
-  function checkCollision(obj1, obj2) { // 碰撞后修改参数
+  function checkCollision(obj1, obj2) { // modify parameter
     
     let id1 = Math.min(obj1.armsId, obj2.armsId);
     let id2 = Math.max(obj1.armsId, obj2.armsId);
@@ -189,7 +190,8 @@
     if(res == false)
       return false;
 
-    console.log('coooooo!');
+    if(obj1.armsId == maintk.armsId || obj2.armsId == maintk.armsId) 
+      outWarStartTime = new Date();
     obj1.healthDrop(obj2.bodyDamage);
     obj2.healthDrop(obj1.bodyDamage);
     
@@ -231,13 +233,30 @@
   // BaseModel part
   function BaseModel (modelX, modelY, armsId = 0) {
     this.model = new createjs.Container();
+    this.headAttrs = [];
+    /*
+      this.headAttrs = [
+        {
+          outerRadius:  number,
+          type:         "Gun"/"Auto"/"Launcher"/"Smasher"/"Factory",
+          layer:        "Top"/"Bottom"
+        }
+      ];
+    */
+    this.headShapes = [];
+    /*
+      this.headShapes :: Array of createjs.Shape
+    */
     this.heads = new createjs.Container();
-    this.headOuterRadius = [];
+    /* 
+      this.heads :: A container of all cursor-following heads
+    */
     this.body = new createjs.Shape();
     this.health = new createjs.Shape();
     this.status = new createjs.Text();
 
     this.type = 0;
+    this.offset = 0;
     this.model.x = modelX;
     this.model.y = modelY;
     this.model.scaleX = 0.8;
@@ -248,8 +267,6 @@
     this.r = 0;
     this.name = '';
 
-    this.model.addChild(this.heads, this.body, this.health, this.status);
-  //  this.model.cache(-80, -80, 160, 160);
     this.setBodyColor('', '', 1);
     this.decorate(this.armsId);
   }
@@ -266,8 +283,28 @@
   }
 
   BaseModel.prototype.decorate = function (armsId) {
+    // 坦克组件
     this.headDecorate((armsId >> 4) & 63);
     this.bodyDecorate(armsId & 3);
+    this.model.removeAllChildren();
+    this.model.addChild(this.heads);
+    for(let i = 0; i < this.headAttrs.length; i++) if(this.headAttrs[i].layer === "Bottom") {
+        if(this.headAttrs[i].type === "Smasher") {
+          createjs.Ticker.addEventListener('tick', $.proxy(function() {
+              this.headShapes[i].rotation += 1;
+            }, this));
+          this.model.addChild(this.headShapes[i]);
+        }
+        else if(this.headAttrs[i].type === "Auto")
+          this.model.addChild(this.headShapes[i]);
+        else 
+          this.heads.addChild(this.headShapes[i]);
+    } 
+    this.model.addChild(this.body);
+    for(let i = 0; i < this.headAttrs.length; i++) if(this.headAttrs[i].layer === "Top")
+      this.model.addChild(this.headShapes[i]);
+    this.model.addChild(this.health, this.status);
+    // 信息组件
     if(((armsId >> 2) & 3) != 1) {
       // 不是子弹，画血条
       this.health.graphics.clear().f('#555555').rr(-30, this.r  + 10, 60, 8, 4);
@@ -285,100 +322,190 @@
     }
     this.setHealthCond(1.0);
     this.armsId = armsId;
-  //  this.model.updateCache();
   }
 
   BaseModel.prototype.headDecorate = function (headId) {
-    headShapes = [];
-    this.headOuterRadius.length = 0;
+    this.headShapes.length = 0;
+    this.headAttrs.length = 0;
+    this.heads.removeAllChildren();
 
     switch(headId) {
       case 0: // 无炮管
         break;
-      case 1: // normal
-        headShapes.push(new createjs.Shape());
-        this.headOuterRadius.push(60);
-        headShapes[0].graphics.ss(4).s('#727272').f('#999999').dr(0, -15, 60, 30);
+      case 1: // Tank
+        this.headShapes.push(new createjs.Shape());
+        this.headShapes[0].graphics.ss(4).s('#727272').f('#999999').dr(0, -15, 60, 30);
+        this.headAttrs.push({outerRadius: 60, type: "Gun", layer: "Bottom"});
         break;
       case 2: // Sniper
-        headShapes.push(new createjs.Shape());
-        this.headOuterRadius.push(70);
-        headShapes[0].graphics.ss(4).s('#727272').f('#999999').dr(0, -15, 70, 30);
+        this.headShapes.push(new createjs.Shape());
+        this.headShapes[0].graphics.ss(4).s('#727272').f('#999999').dr(0, -15, 70, 30);
+        this.headAttrs.push({outerRadius: 70, type: "Gun", layer: "Bottom"});
         break;
       case 3: // Flank Guard
-        headShapes.push(new createjs.Shape(), new createjs.Shape());
-        this.headOuterRadius.push(60, 45);
-        headShapes[0].graphics.ss(4).s('#727272').f('#999999').dr(0, -15, 60, 30);
-        headShapes[1].graphics.ss(4).s('#727272').f('#999999').dr(0, -15, 45, 30);
-        headShapes[1].rotation = 180;
+        this.headShapes.push(new createjs.Shape(), new createjs.Shape());
+        this.headShapes[0].graphics.ss(4).s('#727272').f('#999999').dr(0, -15, 60, 30);
+        this.headAttrs.push({outerRadius: 60, type: "Gun", layer: "Bottom"});
+        this.headShapes[1].graphics.ss(4).s('#727272').f('#999999').dr(0, -15, 45, 30);
+        this.headShapes[1].rotation = 180;
+        this.headAttrs.push({outerRadius: 45, type: "Gun", layer: "Bottom"});
         break;
-      case 4: // 梯形炮管 * 1
-        headShapes.push(new createjs.Shape());
-        this.headOuterRadius.push(60);
-        headShapes[0].graphics.ss(4).s('#727272').f('#999999');
-        headShapes[0].graphics.mt(-30, 0).lt(60, -20).mt(58, -20).lt(58, 20).mt(60, 20).lt(-30, 0);
+      case 4: // Twin
+        this.headShapes.push(new createjs.Shape(), new createjs.Shape());
+        this.headShapes[0].graphics.ss(4).s('#727272').f('#999999').dr(0, -28, 60, 25);
+        this.headAttrs.push({outerRadius: 60, type: "Gun", layer: "Bottom"});
+        this.headShapes[1].graphics.ss(4).s('#727272').f('#999999').dr(0, 3, 60, 25);
+        this.headAttrs.push({outerRadius: 60, type: "Gun", layer: "Bottom"});
+        this.offset = 10;
         break;
-      case 5: // twin
-        headShapes.push(new createjs.Shape(), new createjs.Shape());
-        this.headOuterRadius.push(60, 60);
-        headShapes[0].graphics.ss(4).s('#727272').f('#999999').dr(0, -20, 60, 17);
-        headShapes[1].graphics.ss(4).s('#727272').f('#999999').dr(0, 3, 60, 17);
-        break;
-      case 6: // triple
-        headShapes.push(new createjs.Shape(), new createjs.Shape(), new createjs.Shape());
-        this.headOuterRadius.push(50, 50, 50);
-        headShapes[0].graphics.ss(4).s('#727272').f('#999999').dr(0, -10, 50, 20);
-        headShapes[1].graphics.ss(4).s('#727272').f('#999999').dr(0, -10, 50, 20);
-        headShapes[1].rotation = 315;
-        headShapes[2].graphics.ss(4).s('#727272').f('#999999').dr(0, -10, 50, 20);
-        headShapes[2].rotation = 45;
-        break;
-      case 7: // 矩形炮管 * 4
-        headShapes.push(new createjs.Shape(), new createjs.Shape(), new createjs.Shape(), new createjs.Shape());
-        this.headOuterRadius.push(60, 60, 60, 60);
-        headShapes[0].graphics.ss(4).s('#727272').f('#999999').dr(0, -15, 60, 30);
-        headShapes[1].graphics.ss(4).s('#727272').f('#999999').dr(0, -15, 60, 30);
-        headShapes[1].rotation = 90;
-        headShapes[2].graphics.ss(4).s('#727272').f('#999999').dr(0, -15, 60, 30);
-        headShapes[2].rotation = 180;
-        headShapes[3].graphics.ss(4).s('#727272').f('#999999').dr(0, -15, 60, 30);
-        headShapes[3].rotation = 270;
-        break;
-      case 8: // Hunter
-        headShapes.push(new createjs.Shape());
-        this.headOuterRadius.push(70);
-        headShapes[0].graphics.ss(4).s('#727272').f('#999999').dr(0, -13, 70, 26);
-        headShapes[0].graphics.ss(4).s('#727272').f('#999999').dr(0, -18, 60, 36);
-        break;
-      case 9: // Smasher
-        headShapes.push(new createjs.Shape());
-        headShapes[0].graphics.ss(4).s('#727272').f('#727272').dp(0, 0, 36, 6, 0, 0);
-        createjs.Ticker.addEventListener('tick', $.proxy(function() {
-                this.heads.rotation += 1;
-            }, this));
+      case 5: // Smasher
+        this.headShapes.push(new createjs.Shape());
+        this.headShapes[0].graphics.ss(4).s('#727272').f('#727272').dp(0, 0, 36, 6, 0, 0);
+        this.headAttrs.push({outerRadius: 0, type: "Smasher", layer: "Bottom"});
         this.r = 34; // XXX:
         break;
-      case 10: // Landmine
-        headShapes.push(new createjs.Shape());
-        headShapes[0].graphics.ss(4).s('#727272').f('#727272').dp(0, 0, 36, 12, 0.2, 0);
-        createjs.Ticker.addEventListener('tick', $.proxy(function() {
-                this.heads.rotation += 1;
-            }, this));
+      case 6: // Hunter
+        this.headShapes.push(new createjs.Shape(), new createjs.Shape());
+        this.headShapes[0].graphics.ss(4).s('#727272').f('#999999').dr(0, -13, 70, 26);
+        this.headAttrs.push({outerRadius: 70, type: "Gun", layer: "Bottom"});
+        this.headShapes[1].graphics.ss(4).s('#727272').f('#999999').dr(0, -18, 60, 36);
+        this.headAttrs.push({outerRadius: 60, type: "Gun", layer: "Bottom"});
+        break;
+      case 7: // Tripper
+        this.headShapes.push(new createjs.Shape());
+        this.headShapes[0].graphics.ss(4).s('#727272').f('#999999').dp(40, 0, 28, 3, 0, 60).dr(0, -14, 36, 28);
+        this.headAttrs.push({outerRadius: 54, type: "Launcher", layer: "Bottom"});
+        break;
+      case 8: // Assassin
+        this.headShapes.push(new createjs.Shape());
+        this.headShapes[0].graphics.ss(4).s('#727272').f('#999999').dr(0, -15, 80, 30);
+        this.headAttrs.push({outerRadius: 80, type: "Gun", layer: "Bottom"});
+        break;
+      case 9: // Destroyer
+        this.headShapes.push(new createjs.Shape());
+        this.headShapes[0].graphics.ss(4).s('#727272').f('#999999').dr(0, -20, 54, 40);
+        this.headAttrs.push({outerRadius: 54, type: "Gun", layer: "Bottom"});
+        break;
+      case 10: // Tri-Angle
+        this.headShapes.push(new createjs.Shape(), new createjs.Shape(), new createjs.Shape());
+        this.headShapes[0].graphics.ss(4).s('#727272').f('#999999').dr(0, -15, 60, 30);
+        this.headAttrs.push({outerRadius: 60, type: "Gun", layer: "Bottom"});
+        this.headShapes[1].graphics.ss(4).s('#727272').f('#999999').dr(0, -13, 50, 26);
+        this.headShapes[1].rotation = 150;
+        this.headAttrs.push({outerRadius: 50, type: "Gun", layer: "Bottom"});
+        this.headShapes[2].graphics.ss(4).s('#727272').f('#999999').dr(0, -13, 50, 26);
+        this.headShapes[2].rotation = 210;
+        this.headAttrs.push({outerRadius: 50, type: "Gun", layer: "Bottom"});
+        break;
+      case 11: case 15:// Quad Tank
+        this.headShapes.push(new createjs.Shape(), new createjs.Shape(), new createjs.Shape(), new createjs.Shape());
+        this.headShapes[0].graphics.ss(4).s('#727272').f('#999999').dr(0, -15, 60, 30);
+        this.headAttrs.push({outerRadius: 60, type: "Gun", layer: "Bottom"});
+        this.headShapes[1].graphics.ss(4).s('#727272').f('#999999').dr(0, -15, 60, 30);
+        this.headShapes[1].rotation = 90;
+        this.headAttrs.push({outerRadius: 60, type: "Gun", layer: "Bottom"});
+        this.headShapes[2].graphics.ss(4).s('#727272').f('#999999').dr(0, -15, 60, 30);
+        this.headShapes[2].rotation = 180;
+        this.headAttrs.push({outerRadius: 60, type: "Gun", layer: "Bottom"});
+        this.headShapes[3].graphics.ss(4).s('#727272').f('#999999').dr(0, -15, 60, 30);
+        this.headShapes[3].rotation = 270;
+        this.headAttrs.push({outerRadius: 60, type: "Gun", layer: "Bottom"});
+        break;
+      case 12: case 16: // Twin Flank
+        this.headShapes.push(new createjs.Shape(), new createjs.Shape(), new createjs.Shape(), new createjs.Shape());
+        this.headShapes[0].graphics.ss(4).s('#727272').f('#999999').dr(0, -28, 60, 25);
+        this.headAttrs.push({outerRadius: 60, type: "Gun", layer: "Bottom"});
+        this.headShapes[1].graphics.ss(4).s('#727272').f('#999999').dr(0, 3, 60, 25);
+        this.headAttrs.push({outerRadius: 60, type: "Gun", layer: "Bottom"});
+        this.headShapes[2].graphics.ss(4).s('#727272').f('#999999').dr(0, -28, 60, 25);
+        this.headShapes[2].rotation = 180;
+        this.headAttrs.push({outerRadius: 60, type: "Gun", layer: "Bottom"});
+        this.headShapes[3].graphics.ss(4).s('#727272').f('#999999').dr(0, 3, 60, 25);
+        this.headShapes[3].rotation = 180;
+        this.headAttrs.push({outerRadius: 60, type: "Gun", layer: "Bottom"});
+        this.offset = 10;
+        break;
+      case 13: // Auto3
+        this.headShapes.push(new createjs.Shape(), new createjs.Shape(), new createjs.Shape());
+        this.headShapes[0].graphics.ss(4).s('#727272').f('#999999').dr(24, -8, 30, 16)
+        this.headShapes[0].graphics.ss(4).s('#727272').f('#999999').dc(24, 0, 14);
+        this.headAttrs.push({outerRadius: 50, type: "Auto", layer: "Bottom"});
+        this.headShapes[1].graphics.ss(4).s('#727272').f('#999999').dr(24, -8, 30, 16);
+        this.headShapes[1].graphics.ss(4).s('#727272').f('#999999').dc(24, 0, 14);
+        this.headShapes[1].rotation = 120;
+        this.headAttrs.push({outerRadius: 50, type: "Auto", layer: "Bottom"});
+        this.headShapes[2].graphics.ss(4).s('#727272').f('#999999').dr(24, -8, 30, 16);
+        this.headShapes[2].graphics.ss(4).s('#727272').f('#999999').dc(24, 0, 14);
+        this.headShapes[2].rotation = 240;
+        this.headAttrs.push({outerRadius: 50, type: "Auto", layer: "Bottom"});
+        break;
+      case 14: // Triple Shot
+        this.headShapes.push(new createjs.Shape(), new createjs.Shape(), new createjs.Shape());
+        this.headShapes[0].graphics.ss(4).s('#727272').f('#999999').dr(0, -10, 50, 20);
+        this.headAttrs.push({outerRadius: 50, type: "Gun", layer: "Bottom"});
+        this.headShapes[1].graphics.ss(4).s('#727272').f('#999999').dr(0, -10, 50, 20);
+        this.headShapes[1].rotation = 315;
+        this.headAttrs.push({outerRadius: 50, type: "Gun", layer: "Bottom"});
+        this.headShapes[2].graphics.ss(4).s('#727272').f('#999999').dr(0, -10, 50, 20);
+        this.headShapes[2].rotation = 45;
+        this.headAttrs.push({outerRadius: 50, type: "Gun", layer: "Bottom"});
+        break;
+      case 17: // Gunner
+        this.headShapes.push(new createjs.Shape(), new createjs.Shape(), new createjs.Shape(), new createjs.Shape());
+        this.headShapes[0].graphics.ss(4).s('#727272').f('#999999').dr(0, -30, 50, 15);
+        this.headAttrs.push({outerRadius: 50, type: "Gun", layer: "Bottom"});
+        this.headShapes[1].graphics.ss(4).s('#727272').f('#999999').dr(0, 15, 50, 15);
+        this.headAttrs.push({outerRadius: 50, type: "Gun", layer: "Bottom"});
+        this.headShapes[2].graphics.ss(4).s('#727272').f('#999999').dr(0, -18, 60, 15);
+        this.headAttrs.push({outerRadius: 60, type: "Gun", layer: "Bottom"});
+        this.headShapes[3].graphics.ss(4).s('#727272').f('#999999').dr(0, 3, 60, 15);
+        this.headAttrs.push({outerRadius: 60, type: "Gun", layer: "Bottom"});
+        break;
+      case 18: // Landmine
+        this.headShapes.push(new createjs.Shape(), new createjs.Shape());
+        this.headShapes[0].graphics.ss(4).s('#727272').f('#727272').dp(0, 0, 34, 12, 0.1, 0);
+        this.headAttrs.push({outerRadius: 0, type: "Smasher", layer: "Bottom"});
+        this.model.scaleX = this.model.scaleY = 1.0;
         this.r = 34; // XXX:
+        break;
+      case 19: // Auto Smasher
+        this.headShapes.push(new createjs.Shape(), new createjs.Shape());
+        this.headShapes[0].graphics.ss(4).s('#727272').f('#999999').dr(0, -10, 40, 20);
+        this.headShapes[0].graphics.ss(4).s('#727272').f('#999999').dc(0, 0, 18);
+        this.headAttrs.push({outerRadius: 24, type: "Auto", layer: "Top"});
+        this.headShapes[1].graphics.ss(4).s('#727272').f('#727272').dp(0, 0, 36, 6, 0, 0);
+        this.headAttrs.push({outerRadius: 0, type: "Smasher", layer: "Bottom"});
+        this.r = 34; // XXX:
+        break;
+      case 20: // Spike
+        this.headShapes.push(new createjs.Shape());
+        this.headShapes[0].graphics.ss(4).s('#727272').f('#727272').dp(0, 0, 38, 12, 0.2, 0);
+        this.headAttrs.push({outerRadius: 0, type: "Smasher", layer: "Bottom"});
+        this.model.scaleX = this.model.scaleY = 0.75;
+        this.r = 34; // XXX:
+        break;
+      case 21: // Shield Smasher
+        break;
+      // ==========================================================
+      case 101: // 梯形炮管 * 1
+        this.headShapes.push(new createjs.Shape());
+        this.headShapes[0].graphics.ss(4).s('#727272').f('#999999');
+        this.headShapes[0].graphics.mt(-30, 0).lt(60, -20).mt(58, -20).lt(58, 20).mt(60, 20).lt(-30, 0);
+        this.headAttrs.push({outerRadius: 60, type: "Gun", layer: "Bottom"});
         break;
       default:
         alert('How can you reach here H?');
         break;
     }
-    this.heads.removeAllChildren();
-    for(let i = 0; i < headShapes.length; i++)
-      this.heads.addChild(headShapes[i]);
-    this.heads.scaleX = this.heads.scaleY = 1;
-  //  this.model.updateCache();
   }
 
   BaseModel.prototype.bodyDecorate = function (bodyId) {
     this.body.graphics.clear().ss(4).s(this.bodyStrokeColor).f(this.bodyFillColor);
+    if(((this.armsId >> 2) & 3) == 3) {
+      this.body.graphics.dp(0, 0, 16, 3, 0.65, 0);
+      this.r = 10;
+      return;
+    }
     switch(bodyId) {
       case 0: // 圆形底座
         this.body.graphics.dc(0, 0, 30);
@@ -395,19 +522,17 @@
       default:
         alert('How can you reach here B?'); break;
     }
-    this.body.scaleX = this.body.scaleY = 1;
-  //  this.model.updateCache();
   }
 
   BaseModel.prototype.setHealthCond = function (ratio) {
-    if(ratio < 0.0 || ratio > 1.0) return;
-    if(((this.armsId >> 2) & 3) != 1) {
-      // 不是子弹，画血条
-      this.health.graphics.clear().f('#555555').rr(-30, this.r  + 10, 60, 8, 4);
-      this.health.graphics.f('#85e37d').rr(-28, this.r  + 12, 56 * ratio, 4, 2);
-    }
-  //  this.model.updateCache();
+  if(ratio < 0.0 || ratio > 1.0) return;
+  if(((this.armsId >> 2) & 3) != 1) {
+    // 不是子弹，画血条
+    this.health.graphics.clear().f('#555555').rr(-30, this.r  + 10, 60, 8, 4);
+    this.health.graphics.f('#85e37d').rr(-28, this.r  + 12, 56 * ratio, 4, 2);
   }
+}
+  
 
   // GeneralModel part
   function GeneralModel (modelX, modelY, armsId) {
@@ -474,6 +599,7 @@
     this.type = 0;
     this.score = 0;
     this.level = 1;
+    this.baseAlpha = 1;
     this.experience = 0;
     this.bulletReloadInterval = 1000;
     this.maxBulletSpeed = 5;
@@ -492,17 +618,33 @@
     Hstage.addChild(bm.model);
     bm.clickNum ++;
     bm.slipIn();
-    if(this.level == 2) {   // 第一次坦克升级
+    if(this.level == 2) {
       Hstage.removeChild(updmenu.model);
       Hstage.addChild(updmenu.model);
       updmenu.slipIn();
     }
-    else if(this.level == 4) {
+    else if(this.level == 5) {
       switch((this.armsId >> 4) & 63) {
-        case 2: for(let i=0;i<4;i++) updmenu.setItemOnShow(i, 128, 'Hunter'); break;
-        case 3: for(let i=0;i<4;i++) updmenu.setItemOnShow(i, 112, 'Quad'); break;
-        case 5: for(let i=0;i<4;i++) updmenu.setItemOnShow(i, 96, 'Triple'); break;
-        case 9: for(let i=0;i<4;i++) updmenu.setItemOnShow(i, 160, 'Lindmine'); break;
+        case 2: updmenu.setItemOnShow(0, 6<<4, 'Hunter');
+                updmenu.setItemOnShow(1, 7<<4, 'Tripper');
+                updmenu.setItemOnShow(2, 8<<4, 'Assassin');
+                updmenu.setItemOnShow(3, 9<<4, 'Destroyer');
+                break;
+        case 3: updmenu.setItemOnShow(0, 10<<4, 'Tri-Angle');
+                updmenu.setItemOnShow(1, 11<<4, 'Quad Tank');
+                updmenu.setItemOnShow(2, 12<<4, 'Twin Flank');
+                updmenu.setItemOnShow(3, 13<<4, 'Auto3');
+                break;
+        case 4: updmenu.setItemOnShow(0, 14<<4, 'Triple');
+                updmenu.setItemOnShow(1, 15<<4, 'Quad Tank');
+                updmenu.setItemOnShow(2, 16<<4, 'Twin Flank');
+                updmenu.setItemOnShow(3, 17<<4, 'Gunner');
+                break;
+        case 5: updmenu.setItemOnShow(0, 18<<4, 'Landmine');
+                updmenu.setItemOnShow(1, 19<<4, 'Auto Sma');
+                updmenu.setItemOnShow(2, 20<<4, 'Spike');
+                updmenu.setItemOnShow(3, 21<<4, 'Shield Sma');
+                break;
         default: return;
       }
       updmenu.slipIn();
@@ -557,29 +699,50 @@
         if (checkCollision(this, creepList[i]) == true)
           return;
       }
+      for (let i = 0; i < tripList.length; i++) {
+        if (tripList[i].belong != maintk.armsId && checkCollision(this, tripList[i]) == true)
+          return;
+      }
     }
   }
 
   Tank.prototype.fireBullet = function() {
     if(this.healthPoint <= 0) return;
-    for(let i = 0; i < this.headOuterRadius.length; i++) {
-      let angle = tools.deg2Rad(this.heads.rotation + this.heads.getChildAt(i).rotation)
-      let bulletX = this.model.x + this.headOuterRadius[i] * Math.cos(angle);
-      let bulletY = this.model.y + this.headOuterRadius[i] * Math.sin(angle);
-      // let bullet = new Bullet(bulletX, bulletY, armsId = 4, this);  // 01 00
+    for(let i = 0; i < this.headShapes.length; i++) {
+      if(this.headAttrs[i].type == 'Auto' || this.headAttrs[i].type == 'Smasher')
+        continue;
+      outWarStartTime = new Date();
+      let angle = tools.deg2Rad(this.heads.rotation + this.headShapes[i].rotation);
+      let bulletX = this.model.x + this.headAttrs[i].outerRadius * Math.cos(angle);
+      let bulletY = this.model.y + this.headAttrs[i].outerRadius * Math.sin(angle);
+      let multi = (i&1)?-1:1;
+      bulletX += multi * this.offset * Math.cos(angle + 90);
+      bulletY += multi * this.offset * Math.sin(angle + 90);
       let xMoveSpeed = this.maxBulletSpeed * Math.cos(angle);
       let yMoveSpeed = this.maxBulletSpeed * Math.sin(angle);
-      // bulletList.push(bullet);
-      // bulletMap[bullet.armsId] = bullet;
-      // stage.addChild(bullet.model);
-      // bullet.bulletMove();
+      if(this.headAttrs[i].type == 'Gun')
+        socket.emit('fire', ['fire', bulletX, bulletY, 0, this.armsId, xMoveSpeed, yMoveSpeed]);
+      else if(this.headAttrs[i].type == 'Launcher')
+        socket.emit('trip', ['trip', bulletX, bulletY, 0, this.armsId, this.bulletDamage]);
+    }
+  }
+
+  Tank.prototype.autoFireBullet = function() {
+    for(let i = 0; i < this.headShapes.length; i++) {
+      if(this.headAttrs[i].type != 'Auto')
+        continue;
+      outWarStartTime = new Date();
+      let angle = tools.deg2Rad(this.headShapes[i].rotation);
+      let bulletX = this.model.x + this.headAttrs[i].outerRadius * Math.cos(angle);
+      let bulletY = this.model.y + this.headAttrs[i].outerRadius * Math.sin(angle);
+      let xMoveSpeed = this.maxBulletSpeed * Math.cos(angle);
+      let yMoveSpeed = this.maxBulletSpeed * Math.sin(angle);
       socket.emit('fire', ['fire', bulletX, bulletY, 0, this.armsId, xMoveSpeed, yMoveSpeed]);
     }
   }
 
-
   // Bullet part
-  function Bullet (modelX, modelY, armsId = 4, belong) {
+  function Bullet (modelX, modelY, armsId = 4, belong = 0) {
     GeneralModel.call(this, modelX, modelY, armsId);
     this.type = 1;
     this.healthPoint = 1;
@@ -634,10 +797,11 @@
 
 
   // Creep part
-  function Creep (modelX, modelY, armsId = 0) {
+  function Creep (modelX, modelY, armsId = 0, belong = 0) {
     GeneralModel.call(this, modelX, modelY, armsId);
-	if(this.armsId)
-    this.type = 2;
+    if(this.armsId)
+      this.type = 2;
+    this.belong = belong;
   }
 
   Creep.prototype = new GeneralModel();
@@ -645,9 +809,18 @@
 
 
   // KeyBoard Event & Mouse Event
+  var preTime = new Date();
+  var autoFire = false;
+
   document.onkeydown = function(ev) {
     var kEvent = ev || window.event;
-    if(kEvent.keyCode == KEYBOARD_UP)
+    if(kEvent.keyCode == 67)    // 'C'
+    {
+      let headId = (maintk.armsId >> 4 & 63);
+      autoFire = !autoFire;
+      console.log('autoFire = ', autoFire);
+    }
+    else if(kEvent.keyCode == KEYBOARD_UP)
       KEYBOARD_CONDITION |= 8;
     else if(kEvent.keyCode == KEYBOARD_DOWN)
       KEYBOARD_CONDITION |= 4;
@@ -671,16 +844,18 @@
 
   document.onmousemove = function(ev) {
     if(!maintk) return;
+    if(autoFire) return;
     var mEvent = ev || window.event;
     let x = Math.round(mEvent.clientX - cvsBox.left - stage.x);
     let y = Math.round(mEvent.clientY - cvsBox.top - stage.y);
-    maintk.heads.rotation = tools.vec2Deg(x - maintk.model.x, y - maintk.model.y)
+    maintk.heads.rotation = tools.vec2Deg(x - maintk.model.x, y - maintk.model.y);
     socket.emit('turn', ['turn', maintk.armsId, maintk.heads.rotation]);
     stage.update();
   }
 
-  var preTime = new Date();
   document.onmousedown = function(ev) {
+    if(!maintk) return;
+    if(autoFire) return;
     let curTime = new Date();
     if(curTime - preTime > maintk.bulletReloadInterval) {
       maintk.fireBullet();
@@ -688,14 +863,70 @@
     }
   }
 
+
   // Ticker Event
-  function autoHealthRegeneration() {
+  function turnAndFire(obj) {
+    if(!maintk) return;
+    let curTime = new Date();
+    if(curTime - preTime > maintk.bulletReloadInterval) {
+      preTime = curTime;
+      let cnt = 0;
+      for(let i = 0; i < maintk.headShapes.length; i++)
+        if(maintk.headAttrs[i].type == 'Auto') {
+          cnt ++;
+          maintk.headShapes[i].rotation = 
+            tools.vec2Deg(obj.model.x - maintk.model.x, obj.model.y - maintk.model.y);
+          if(cnt > 1)
+            maintk.headShapes[i].rotation += Math.random() * 360;
+          socket.emit('pturn', ['pturn', maintk.armsId, i, maintk.headShapes[i].rotation]);
+        }
+      stage.update();
+      maintk.autoFireBullet();
+    }
+  }
+
+  function autoFireEvent() {
+    if(!maintk) return;
+    if(!autoFire) return;
+    for(let i = 0; i < tankList.length; i++)
+      if(isNear(maintk, tankList[i])) {
+        turnAndFire(tankList[i]);
+        return;
+      }
+    for(let i = 0; i < creepList.length; i++)
+      if(isNear(maintk, creepList[i])) {
+        turnAndFire(creepList[i]);
+        return;
+      }
+  }
+  setInterval(autoFireEvent, 100);
+
+  function autoHealthRegenerationEvent() {
     if(!maintk) return;
     maintk.healthPoint += maintk.regenerationRate;
     maintk.healthPoint = Math.min(maintk.healthPoint, maintk.maxHealthPoint);
     socket.emit('HPdrop', ['HPdrop', maintk.armsId, maintk.healthPoint]);
   }
-  setInterval(autoHealthRegeneration, 3000);
+  setInterval(autoHealthRegenerationEvent, 3000);
+
+  var outWarStartTime = new Date();
+  function autoDisappear() {
+    let curTime = new Date();
+    if(curTime - outWarStartTime < 30) {
+      maintk.baseAlpha = 1;
+      maintk.model.alpha = 1;
+      socket.emit('transparent', ['transparent', maintk.armsId, 1]);
+      return;
+    }
+    if(curTime - outWarStartTime > 5000) {
+      maintk.baseAlpha -= 0.006;
+      if(maintk.baseAlpha < 0)
+        maintk.baseAlpha = 0;
+      maintk.model.alpha = Math.max(maintk.baseAlpha, 0.2);
+      socket.emit('transparent', ['transparent', maintk.armsId, maintk.baseAlpha]);
+      return;
+    }
+  }
 
   // Handle Server Message
   function find(id) {
@@ -705,8 +936,11 @@
     for(let i = 0; i < bulletList.length; i++)
       if(bulletList[i].armsId == id)
         return bulletList[i];
-    for(let i = 0; i < creepList.length; i++)
+        for(let i = 0; i < creepList.length; i++)
       if(creepList[i].armsId == id)
+        return creepList[i];
+    for(let i = 0; i < tripList.length; i++)
+      if(tripList[i].armsId == id)
         return creepList[i];
     return 0;
     // alert('Find Nothing');
@@ -726,6 +960,11 @@
     for(let i = 0; i < bulletList.length; i++)
       if(id == bulletList[i].armsId) {
         bulletList.splice(i, 1);
+        return;
+      }
+    for(let i = 0; i < tripList.length; i++)
+      if(id == tripList[i].armsId) {
+        tripList.splice(i, 1);
         return;
       }
   }
@@ -768,6 +1007,11 @@
         if(tankList[i].armsId == data[1])
           tankList[i].heads.rotation = data[2];
     },
+    pturn: function(data) {
+      let tk = find(data[1]);
+      if(!tk) return;
+      tk.headShapes[data[2]].rotation = data[3];
+    },
     fire: function(data) {
       // ['fire', bulletX, bulletY, bulletId, tankId, xMoveSpeed, yMoveSpeed]
       // rule: who fire the bullet, who check the collision.
@@ -784,6 +1028,21 @@
       stage.addChild(bullet.model);
       bullet.bulletMove();
     },
+    trip: function(data) {
+      // ['trip', tripX, tripY, tripId, tankId, bodyDamage]
+      console.log('tripId = ', data[3]);
+      let trip = new Creep(data[1], data[2], data[3], data[4]);
+      trip.bonus = 0;
+      trip.bodyDamage = data[5];
+      if(data[4] != maintk.armsId) {
+        trip.setBodyColor('', '', 5);
+        trip.decorate(trip.armsId);
+      }
+      trip.healthPoint = 1;
+      trip.maxHealthPoint = 1;
+      tripList.push(trip);
+      stage.addChild(trip.model);
+    },
     collide: function(data) {
       // ['collide', armsId, destX, destY]
       let obj = find(data[1]), destX = data[2], destY = data[3];
@@ -796,6 +1055,7 @@
       tank.healthPoint = data[4];
       tank.maxHealthPoint = data[5];
       tank.bodyDamage = data[6];
+      tank.model.alpha = data[7];
       tank.setHealthCond(data[4] / data[5]);
       tank.setBodyColor('', '', 5);
       tank.decorate(tank.armsId);
@@ -805,13 +1065,22 @@
     },
     addCreep: function(data) {
       let creep = new Creep(data[2], data[3], data[1]);
-      creep.setBodyColor('', '', Math.floor(Math.random() * 4 + 2));
+      if((data[1] >> 2 & 3) == 3) // trip
+        creep.setBodyColor('', '', 5);
+      else
+        creep.setBodyColor('', '', Math.floor(Math.random() * 4 + 2));
       creep.decorate(creep.armsId);
       creep.healthPoint = data[4];
       creep.maxHealthPoint = data[5];
+      creep.bodyDamage = data[6];
       creep.setHealthCond(data[4] / data[5]);
-      creepList.push(creep);
-      creepMap[creep.armsId] = creep;
+      if((data[1] >> 2 & 3) == 3) { // trip 
+        creep.bonus = 0;
+        tripList.push(creep);
+      }
+      else
+        creepList.push(creep);
+      // creepMap[creep.armsId] = creep;
       stage.addChild(creep.model);
     },
     killed: function(data) {
@@ -834,7 +1103,13 @@
           bulletList.splice(i, 1);
           break;
         }
-      if(!obj) return;
+      for(let i = 0; i < tripList.length; i++)
+        if(tripList[i].armsId == data[1]) {
+          obj = tripList[i];
+          tripList.splice(i, 1);
+          break;
+        }
+        if(!obj) return;
       console.log(obj, ' is killed.');
       stage.removeChild(obj.model);
       createjs.Tween.removeTweens(obj.model);
@@ -847,6 +1122,8 @@
       let obj = find(data[1]);
       if(!obj) return;
       console.log(data[1], ': HP drop');
+      if(obj.armsId == maintk.armsId && data[2] < maintk.healthPoint)
+        outWarStartTime = new Date();
       obj.healthPoint = data[2];
       obj.setHealthCond(obj.healthPoint / obj.maxHealthPoint);
     },
@@ -866,13 +1143,25 @@
                 tankMap[tk.armsId] = tk;
                 tk.decorate(tk.armsId);
                 tk.setHealthCond(tk.healthPoint / tk.maxHealthPoint);
+                if(tk.armsId == maintk.armsId && ((maintk.armsId >> 4) & 63) == 8) {  // Assassin
+                  setInterval(autoDisappear, 30);
+                }
+                if(tk.armsId == maintk.armsId && ((maintk.armsId >> 4) & 63) == 18) {  // Landmine
+                  setInterval(autoDisappear, 30);
+                }
                 break;
         default: break;
       }
+    },
+    transparent: function(data) {
+      let tk = find(data[1]);
+      if(!tk) return;
+      tk.model.alpha = data[2];
     }
   };
 
   // 实例
+  socket.on('transparent', serverMessage);
   socket.on('addTank', serverMessage);
   socket.on('addCreep', serverMessage);
   socket.on('control', serverMessage);
@@ -880,9 +1169,11 @@
   socket.on('collide', serverMessage);
   socket.on('killed', serverMessage);
   socket.on('HPdrop', serverMessage);
+  socket.on('pturn', serverMessage);
   socket.on('move', serverMessage);
   socket.on('turn', serverMessage);
   socket.on('fire', serverMessage);
+  socket.on('trip', serverMessage);
 
   Hcanvas.width = BODY_WIDTH;
   Hcanvas.height = BODY_HEIGHT;
@@ -899,10 +1190,10 @@
     Hstage.update();
   });
   var updmenu = new UpgradeMenu(10, 10);
-  updmenu.setItemOnShow(0, 32, 'Sniper');
-  updmenu.setItemOnShow(1, 48, 'Guard');
-  updmenu.setItemOnShow(2, 80, 'Twin');
-  updmenu.setItemOnShow(3, 144, 'Smasher');
+  updmenu.setItemOnShow(0, 2<<4, 'Sniper');
+  updmenu.setItemOnShow(1, 3<<4, 'Guard');
+  updmenu.setItemOnShow(2, 4<<4, 'Twin');
+  updmenu.setItemOnShow(3, 5<<4, 'Smasher');
   
   var border = new createjs.Shape();
   border.graphics.ss(4).s('#727272').dr(50, 50, 1900, 1900);
