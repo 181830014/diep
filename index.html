@@ -25,14 +25,26 @@
   <link rel="stylesheet" type="text/css" href="stylesheets/index_login.css">
 </head>
 
-<div id="login-page" class="login-page">
-  <div class="input-cont">
-    <input id="name-box" type="text" maxlength="30" v-on:keyup.13="login()" v-model="nickname" placeholder="input your name" />
-    <div id="btn-start" class="btn-start" v-on:click="login()">
-      <span>Start !</span>
-      <div id="connecting-img" class="connecting-img" v-bind:class="{'show':gameState==1}"></div>
+
+<div id="js-game" class="game-container" v-bind:class="{'hide':gameState!=3}">
+    <div id="js-container">
+        <div id="js-kill-bd" class="game-kill-borad">
+            <!--<div class="kill-line">
+                <span>YOU</span> <a>killed</a> <span>AGSFS</span>
+            </div>-->
+        </div>
     </div>
-  </div>
+</div>
+<div id="js-main-page" class="main-page" v-bind:class="{'hide':gameState>=2}">
+    <div id="login-page" class="login-page">
+        <div class="input-cont">
+            <input id="name-box" type="text" maxlength="30" v-on:keyup.13="login()" v-model="nickname" placeholder="input your name" />
+            <div id="btn-start" class="btn-start" v-on:click="login()">
+                <span>Start !</span>
+                <div id="connecting-img" class="connecting-img" v-bind:class="{'show':gameState==1}"></div>
+            </div>
+        </div>
+    </div>
 </div>
 
 <body style="overflow:-Scroll; overflow-x:hidden; overflow-y:hidden; height:100%"> 
@@ -42,11 +54,11 @@
 <script>
   var pageVueData = {
     nickname: '',
-    gameState: 0 // 0表示未开始 1表示等待连接 2表示游戏运行中
+    gameState: 0 // 0表示未开始 1表示等待连接 2表示游戏运行中 3表示玩家坦克死亡
     // other attrs ...
   }
   var pageVue = new Vue({
-    el: '#login-page',
+    el: '#js-main-page',
     data: pageVueData,
     methods: {
       login: function () {
@@ -57,6 +69,11 @@
       }
     }
   });
+  var deathPageVue = new Vue({
+    el: '#js-game',
+    data: pageVueData,
+    methods: {}
+  });
   // ------------以下是服务器拒绝登入后应触发的过程实例---------------
   function accessDenied() {
     pageVueData.nickname = '';
@@ -65,9 +82,28 @@
   // ------------以下是服务器准许登入后应触发的过程实例---------------
   function gameStart(nickname) {
     // $('#login-page').style.display="none";
-    $('#login-page').remove();
+    // $('#login-page').remove();
     pageVueData.gameState = 2;
     // alert(pageVueData.nickname);
+  }
+  // ------------killed -------------------------------------------
+  var js_kill_bd = $("#js-kill-bd");
+  function gui_top_msg(htmlstr) {
+      var hdom = $("<div class='kill-line'>"+htmlstr+"</div>");
+      js_kill_bd.append(hdom);
+      setTimeout(function () {
+          hdom.css("margin-top", "-" + (hdom.height() + 3) + "px");
+      },2700);
+      setTimeout(function () {
+          hdom.remove();
+      }, 3000);
+      setTimeout(function () {
+          pageVueData.nickname = '';
+          pageVueData.gameState = 0;
+      }, 4000);
+  }
+  function gui_show_kill(a, b) {
+      gui_top_msg("<span>" + a + "</span><a>killed</a><span>" + b + "</span>");
   }
 
   var socket = io();
@@ -371,7 +407,7 @@
         this.headShapes[1].graphics.ss(4).s('#727272').f('#999999').dr(0, -18, 60, 36);
         this.headAttrs.push({outerRadius: 60, type: "Gun", layer: "Bottom"});
         break;
-      case 7: // Tripper
+      case 7: // Trapper
         this.headShapes.push(new createjs.Shape());
         this.headShapes[0].graphics.ss(4).s('#727272').f('#999999').dp(40, 0, 28, 3, 0, 60).dr(0, -14, 36, 28);
         this.headAttrs.push({outerRadius: 54, type: "Launcher", layer: "Bottom"});
@@ -626,7 +662,7 @@
     else if(this.level == 5) {
       switch((this.armsId >> 4) & 63) {
         case 2: updmenu.setItemOnShow(0, 6<<4, 'Hunter');
-                updmenu.setItemOnShow(1, 7<<4, 'Tripper');
+                updmenu.setItemOnShow(1, 7<<4, 'Trapper');
                 updmenu.setItemOnShow(2, 8<<4, 'Assassin');
                 updmenu.setItemOnShow(3, 9<<4, 'Destroyer');
                 break;
@@ -988,6 +1024,7 @@
       maintk.decorate(maintk.armsId);
       iw.init(maintk.name, 'Tank', 0, 1, 0);
       createjs.Ticker.addEventListener('tick', function() {
+      	if(!maintk) return;
         stage.x = (BODY_WIDTH >> 1) - maintk.model.x;
         stage.y = (BODY_HEIGHT >> 1) - maintk.model.y;
         if(maintk)
@@ -1114,7 +1151,9 @@
       stage.removeChild(obj.model);
       createjs.Tween.removeTweens(obj.model);
       if(obj.armsId == maintk.armsId) {
-        alert('YOU DIE!');
+        pageVueData.gameState = 3;
+        gui_show_kill("YOU DIE", "SHOW LOGIN PAGE AFTER 3s");
+        //alert('YOU DIE!');
         maintk = null;
       }
     },
