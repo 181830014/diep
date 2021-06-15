@@ -371,136 +371,136 @@
       case 1: // Tank
         this.headShapes.push(new createjs.Shape());
         this.headShapes[0].graphics.ss(4).s('#727272').f('#999999').dr(0, -15, 60, 30);
-        this.headAttrs.push({outerRadius: 60, type: "Gun", layer: "Bottom"});
+        this.headAttrs.push({outerRadius: 60, type: "Gun", layer: "Bottom", r: 30});
         break;
       case 2: // Sniper
         this.headShapes.push(new createjs.Shape());
         this.headShapes[0].graphics.ss(4).s('#727272').f('#999999').dr(0, -15, 70, 30);
-        this.headAttrs.push({outerRadius: 70, type: "Gun", layer: "Bottom"});
+        this.headAttrs.push({outerRadius: 70, type: "Gun", layer: "Bottom", r: 30});
         break;
       case 3: // Flank Guard
         this.headShapes.push(new createjs.Shape(), new createjs.Shape());
         this.headShapes[0].graphics.ss(4).s('#727272').f('#999999').dr(0, -15, 60, 30);
-        this.headAttrs.push({outerRadius: 60, type: "Gun", layer: "Bottom"});
+        this.headAttrs.push({outerRadius: 60, type: "Gun", layer: "Bottom", r: 30});
         this.headShapes[1].graphics.ss(4).s('#727272').f('#999999').dr(0, -15, 45, 30);
         this.headShapes[1].rotation = 180;
-        this.headAttrs.push({outerRadius: 45, type: "Gun", layer: "Bottom"});
+        this.headAttrs.push({outerRadius: 45, type: "Gun", layer: "Bottom", r: 30});
         break;
       case 4: // Twin
         this.headShapes.push(new createjs.Shape(), new createjs.Shape());
         this.headShapes[0].graphics.ss(4).s('#727272').f('#999999').dr(0, -28, 60, 25);
-        this.headAttrs.push({outerRadius: 60, type: "Gun", layer: "Bottom"});
+        this.headAttrs.push({outerRadius: 60, type: "Gun", layer: "Bottom", r: 25});
         this.headShapes[1].graphics.ss(4).s('#727272').f('#999999').dr(0, 3, 60, 25);
-        this.headAttrs.push({outerRadius: 60, type: "Gun", layer: "Bottom"});
+        this.headAttrs.push({outerRadius: 60, type: "Gun", layer: "Bottom", r: 25});
         this.offset = 10;
         break;
       case 5: // Smasher
         this.headShapes.push(new createjs.Shape());
         this.headShapes[0].graphics.ss(4).s('#727272').f('#727272').dp(0, 0, 36, 6, 0, 0);
-        this.headAttrs.push({outerRadius: 0, type: "Smasher", layer: "Bottom"});
+        this.headAttrs.push({outerRadius: 0, type: "Smasher", layer: "Bottom", r: 0});
         this.r = 34; // XXX:
         break;
       case 6: // Hunter
         this.headShapes.push(new createjs.Shape(), new createjs.Shape());
         this.headShapes[0].graphics.ss(4).s('#727272').f('#999999').dr(0, -13, 70, 26);
-        this.headAttrs.push({outerRadius: 70, type: "Gun", layer: "Bottom"});
+        this.headAttrs.push({outerRadius: 70, type: "Gun", layer: "Bottom", r: 26});
         this.headShapes[1].graphics.ss(4).s('#727272').f('#999999').dr(0, -18, 60, 36);
-        this.headAttrs.push({outerRadius: 60, type: "Gun", layer: "Bottom"});
+        this.headAttrs.push({outerRadius: 60, type: "Gun", layer: "Bottom", r: 36});
         break;
       case 7: // Trapper
         this.headShapes.push(new createjs.Shape());
         this.headShapes[0].graphics.ss(4).s('#727272').f('#999999').dp(40, 0, 28, 3, 0, 60).dr(0, -14, 36, 28);
-        this.headAttrs.push({outerRadius: 54, type: "Launcher", layer: "Bottom"});
+        this.headAttrs.push({outerRadius: 54, type: "Launcher", layer: "Bottom", r: 30});
         break;
       case 8: // Assassin
         this.headShapes.push(new createjs.Shape());
         this.headShapes[0].graphics.ss(4).s('#727272').f('#999999').dr(0, -15, 80, 30);
-        this.headAttrs.push({outerRadius: 80, type: "Gun", layer: "Bottom"});
+        this.headAttrs.push({outerRadius: 80, type: "Gun", layer: "Bottom", r: 30});
         break;
       case 9: // Destroyer
         this.headShapes.push(new createjs.Shape());
         this.headShapes[0].graphics.ss(4).s('#727272').f('#999999').dr(0, -20, 54, 40);
-        this.headAttrs.push({outerRadius: 54, type: "Gun", layer: "Bottom"});
+        this.headAttrs.push({outerRadius: 54, type: "Gun", layer: "Bottom", r: 40});
         break;
       case 10: // Tri-Angle
         this.headShapes.push(new createjs.Shape(), new createjs.Shape(), new createjs.Shape());
         this.headShapes[0].graphics.ss(4).s('#727272').f('#999999').dr(0, -15, 60, 30);
-        this.headAttrs.push({outerRadius: 60, type: "Gun", layer: "Bottom"});
+        this.headAttrs.push({outerRadius: 60, type: "Gun", layer: "Bottom", r: 30});
         this.headShapes[1].graphics.ss(4).s('#727272').f('#999999').dr(0, -13, 50, 26);
         this.headShapes[1].rotation = 150;
-        this.headAttrs.push({outerRadius: 50, type: "Gun", layer: "Bottom"});
+        this.headAttrs.push({outerRadius: 50, type: "Gun", layer: "Bottom", r: 26});
         this.headShapes[2].graphics.ss(4).s('#727272').f('#999999').dr(0, -13, 50, 26);
         this.headShapes[2].rotation = 210;
-        this.headAttrs.push({outerRadius: 50, type: "Gun", layer: "Bottom"});
+        this.headAttrs.push({outerRadius: 50, type: "Gun", layer: "Bottom", r: 26});
         break;
       case 11: case 15:// Quad Tank
         this.headShapes.push(new createjs.Shape(), new createjs.Shape(), new createjs.Shape(), new createjs.Shape());
         this.headShapes[0].graphics.ss(4).s('#727272').f('#999999').dr(0, -15, 60, 30);
-        this.headAttrs.push({outerRadius: 60, type: "Gun", layer: "Bottom"});
+        this.headAttrs.push({outerRadius: 60, type: "Gun", layer: "Bottom", r: 30});
         this.headShapes[1].graphics.ss(4).s('#727272').f('#999999').dr(0, -15, 60, 30);
         this.headShapes[1].rotation = 90;
-        this.headAttrs.push({outerRadius: 60, type: "Gun", layer: "Bottom"});
+        this.headAttrs.push({outerRadius: 60, type: "Gun", layer: "Bottom", r: 30});
         this.headShapes[2].graphics.ss(4).s('#727272').f('#999999').dr(0, -15, 60, 30);
         this.headShapes[2].rotation = 180;
-        this.headAttrs.push({outerRadius: 60, type: "Gun", layer: "Bottom"});
+        this.headAttrs.push({outerRadius: 60, type: "Gun", layer: "Bottom", r: 30});
         this.headShapes[3].graphics.ss(4).s('#727272').f('#999999').dr(0, -15, 60, 30);
         this.headShapes[3].rotation = 270;
-        this.headAttrs.push({outerRadius: 60, type: "Gun", layer: "Bottom"});
+        this.headAttrs.push({outerRadius: 60, type: "Gun", layer: "Bottom", r: 30});
         break;
       case 12: case 16: // Twin Flank
         this.headShapes.push(new createjs.Shape(), new createjs.Shape(), new createjs.Shape(), new createjs.Shape());
         this.headShapes[0].graphics.ss(4).s('#727272').f('#999999').dr(0, -28, 60, 25);
-        this.headAttrs.push({outerRadius: 60, type: "Gun", layer: "Bottom"});
+        this.headAttrs.push({outerRadius: 60, type: "Gun", layer: "Bottom", r: 25});
         this.headShapes[1].graphics.ss(4).s('#727272').f('#999999').dr(0, 3, 60, 25);
-        this.headAttrs.push({outerRadius: 60, type: "Gun", layer: "Bottom"});
+        this.headAttrs.push({outerRadius: 60, type: "Gun", layer: "Bottom", r: 25});
         this.headShapes[2].graphics.ss(4).s('#727272').f('#999999').dr(0, -28, 60, 25);
         this.headShapes[2].rotation = 180;
-        this.headAttrs.push({outerRadius: 60, type: "Gun", layer: "Bottom"});
+        this.headAttrs.push({outerRadius: 60, type: "Gun", layer: "Bottom", r: 25});
         this.headShapes[3].graphics.ss(4).s('#727272').f('#999999').dr(0, 3, 60, 25);
         this.headShapes[3].rotation = 180;
-        this.headAttrs.push({outerRadius: 60, type: "Gun", layer: "Bottom"});
+        this.headAttrs.push({outerRadius: 60, type: "Gun", layer: "Bottom", r: 25});
         this.offset = 10;
         break;
       case 13: // Auto3
         this.headShapes.push(new createjs.Shape(), new createjs.Shape(), new createjs.Shape());
         this.headShapes[0].graphics.ss(4).s('#727272').f('#999999').dr(24, -8, 30, 16)
         this.headShapes[0].graphics.ss(4).s('#727272').f('#999999').dc(24, 0, 14);
-        this.headAttrs.push({outerRadius: 50, type: "Auto", layer: "Bottom"});
+        this.headAttrs.push({outerRadius: 50, type: "Auto", layer: "Bottom", r: 16});
         this.headShapes[1].graphics.ss(4).s('#727272').f('#999999').dr(24, -8, 30, 16);
         this.headShapes[1].graphics.ss(4).s('#727272').f('#999999').dc(24, 0, 14);
         this.headShapes[1].rotation = 120;
-        this.headAttrs.push({outerRadius: 50, type: "Auto", layer: "Bottom"});
+        this.headAttrs.push({outerRadius: 50, type: "Auto", layer: "Bottom", r: 16});
         this.headShapes[2].graphics.ss(4).s('#727272').f('#999999').dr(24, -8, 30, 16);
         this.headShapes[2].graphics.ss(4).s('#727272').f('#999999').dc(24, 0, 14);
         this.headShapes[2].rotation = 240;
-        this.headAttrs.push({outerRadius: 50, type: "Auto", layer: "Bottom"});
+        this.headAttrs.push({outerRadius: 50, type: "Auto", layer: "Bottom", r: 16});
         break;
       case 14: // Triple Shot
         this.headShapes.push(new createjs.Shape(), new createjs.Shape(), new createjs.Shape());
         this.headShapes[0].graphics.ss(4).s('#727272').f('#999999').dr(0, -10, 50, 20);
-        this.headAttrs.push({outerRadius: 50, type: "Gun", layer: "Bottom"});
+        this.headAttrs.push({outerRadius: 50, type: "Gun", layer: "Bottom", r: 20});
         this.headShapes[1].graphics.ss(4).s('#727272').f('#999999').dr(0, -10, 50, 20);
         this.headShapes[1].rotation = 315;
-        this.headAttrs.push({outerRadius: 50, type: "Gun", layer: "Bottom"});
+        this.headAttrs.push({outerRadius: 50, type: "Gun", layer: "Bottom", r: 20});
         this.headShapes[2].graphics.ss(4).s('#727272').f('#999999').dr(0, -10, 50, 20);
         this.headShapes[2].rotation = 45;
-        this.headAttrs.push({outerRadius: 50, type: "Gun", layer: "Bottom"});
+        this.headAttrs.push({outerRadius: 50, type: "Gun", layer: "Bottom", r: 20});
         break;
       case 17: // Gunner
         this.headShapes.push(new createjs.Shape(), new createjs.Shape(), new createjs.Shape(), new createjs.Shape());
         this.headShapes[0].graphics.ss(4).s('#727272').f('#999999').dr(0, -30, 50, 15);
-        this.headAttrs.push({outerRadius: 50, type: "Gun", layer: "Bottom"});
+        this.headAttrs.push({outerRadius: 50, type: "Gun", layer: "Bottom", r: 15});
         this.headShapes[1].graphics.ss(4).s('#727272').f('#999999').dr(0, 15, 50, 15);
-        this.headAttrs.push({outerRadius: 50, type: "Gun", layer: "Bottom"});
+        this.headAttrs.push({outerRadius: 50, type: "Gun", layer: "Bottom", r: 15});
         this.headShapes[2].graphics.ss(4).s('#727272').f('#999999').dr(0, -18, 60, 15);
-        this.headAttrs.push({outerRadius: 60, type: "Gun", layer: "Bottom"});
+        this.headAttrs.push({outerRadius: 60, type: "Gun", layer: "Bottom", r: 15});
         this.headShapes[3].graphics.ss(4).s('#727272').f('#999999').dr(0, 3, 60, 15);
-        this.headAttrs.push({outerRadius: 60, type: "Gun", layer: "Bottom"});
+        this.headAttrs.push({outerRadius: 60, type: "Gun", layer: "Bottom", r: 15});
         break;
       case 18: // Landmine
         this.headShapes.push(new createjs.Shape(), new createjs.Shape());
         this.headShapes[0].graphics.ss(4).s('#727272').f('#727272').dp(0, 0, 34, 12, 0.1, 0);
-        this.headAttrs.push({outerRadius: 0, type: "Smasher", layer: "Bottom"});
+        this.headAttrs.push({outerRadius: 0, type: "Smasher", layer: "Bottom", r: 0});
         this.model.scaleX = this.model.scaleY = 1.0;
         this.r = 34; // XXX:
         break;
@@ -508,15 +508,15 @@
         this.headShapes.push(new createjs.Shape(), new createjs.Shape());
         this.headShapes[0].graphics.ss(4).s('#727272').f('#999999').dr(0, -10, 40, 20);
         this.headShapes[0].graphics.ss(4).s('#727272').f('#999999').dc(0, 0, 18);
-        this.headAttrs.push({outerRadius: 24, type: "Auto", layer: "Top"});
+        this.headAttrs.push({outerRadius: 24, type: "Auto", layer: "Top", r: 20});
         this.headShapes[1].graphics.ss(4).s('#727272').f('#727272').dp(0, 0, 36, 6, 0, 0);
-        this.headAttrs.push({outerRadius: 0, type: "Smasher", layer: "Bottom"});
+        this.headAttrs.push({outerRadius: 0, type: "Smasher", layer: "Bottom", r: 0});
         this.r = 34; // XXX:
         break;
       case 20: // Spike
         this.headShapes.push(new createjs.Shape());
         this.headShapes[0].graphics.ss(4).s('#727272').f('#727272').dp(0, 0, 38, 12, 0.2, 0);
-        this.headAttrs.push({outerRadius: 0, type: "Smasher", layer: "Bottom"});
+        this.headAttrs.push({outerRadius: 0, type: "Smasher", layer: "Bottom", r: 0});
         this.model.scaleX = this.model.scaleY = 0.75;
         this.r = 34; // XXX:
         break;
@@ -544,8 +544,8 @@
     }
     switch(bodyId) {
       case 0: // 圆形底座
-        this.body.graphics.dc(0, 0, 30);
-        this.r = 30; break;
+        this.body.graphics.dc(0, 0, 30); this.r = 30;
+        break;
       case 1: // 方形底座
         this.body.graphics.dr(-20, -20, 40, 40);
         this.r = 20; break;
@@ -756,8 +756,9 @@
       bulletY += multi * this.offset * Math.sin(angle + 90);
       let xMoveSpeed = this.maxBulletSpeed * Math.cos(angle);
       let yMoveSpeed = this.maxBulletSpeed * Math.sin(angle);
+      let radius = this.headAttrs[i].r;
       if(this.headAttrs[i].type == 'Gun')
-        socket.emit('fire', ['fire', bulletX, bulletY, 0, this.armsId, xMoveSpeed, yMoveSpeed]);
+        socket.emit('fire', ['fire', bulletX, bulletY, 0, this.armsId, xMoveSpeed, yMoveSpeed, radius]);
       else if(this.headAttrs[i].type == 'Launcher')
         socket.emit('trip', ['trip', bulletX, bulletY, 0, this.armsId, this.bulletDamage]);
     }
@@ -773,7 +774,8 @@
       let bulletY = this.model.y + this.headAttrs[i].outerRadius * Math.sin(angle);
       let xMoveSpeed = this.maxBulletSpeed * Math.cos(angle);
       let yMoveSpeed = this.maxBulletSpeed * Math.sin(angle);
-      socket.emit('fire', ['fire', bulletX, bulletY, 0, this.armsId, xMoveSpeed, yMoveSpeed]);
+      let radius = this.headAttrs[i].r;
+      socket.emit('fire', ['fire', bulletX, bulletY, 0, this.armsId, xMoveSpeed, yMoveSpeed, radius]);
     }
   }
 
@@ -1050,9 +1052,8 @@
       tk.headShapes[data[2]].rotation = data[3];
     },
     fire: function(data) {
-      // ['fire', bulletX, bulletY, bulletId, tankId, xMoveSpeed, yMoveSpeed]
+      // ['fire', bulletX, bulletY, bulletId, tankId, xMoveSpeed, yMoveSpeed, r]
       // rule: who fire the bullet, who check the collision.
-      console.log('bulletId = ', data[3]);
       let bullet = new Bullet(data[1], data[2], data[3], data[4]);
       if(data[4] != maintk.armsId) {
         bullet.setBodyColor('', '', 5);
@@ -1060,6 +1061,11 @@
       }
       bullet.xMoveSpeed = data[5];
       bullet.yMoveSpeed = data[6];
+      bullet.model.scaleX = 0.4 * data[7] / 30;
+      bullet.model.scaleY = 0.4 * data[7] / 30;
+      bullet.bodyDamage = bullet.bodyDamage * bullet.model.scaleX / 0.4;
+      console.log('bulletScale = ', bullet.model.scaleX);
+      bullet.decorate(bullet.armsId);
       bulletList.push(bullet);
       bulletMap[data[3]] = bullet;
       stage.addChild(bullet.model);
