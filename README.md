@@ -4,7 +4,7 @@
 
 ### 介绍
 
-An online battle tank mini game built using Express and socket.io.
+An online battle tank mini game built using Express and socket.io.\\
 The front-end part uses canvas and introduces the CreateJS third-party library.
 
     
