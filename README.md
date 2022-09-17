@@ -2,7 +2,7 @@
 
 
 
-### 介绍
+### Introduction
 
 An online battle tank mini game built using Express and socket.io.
 
