@@ -12,7 +12,7 @@ The front-end part uses canvas and introduces the CreateJS third-party library.
 
 ``` bash
 
-$ git clone https://github.com/181830014/diep_v1.git
+$ git clone https://github.com/181830014/diep.git
  
  
 $ npm install
