@@ -17,10 +17,13 @@ $ git clone https://github.com/181830014/diep.git
  
 $ npm install
 
+-- run locally
 $ npm run dev
 
-
+-- if you want to deploy it on a server, run
 $ npm run server
 
 
 ```
+
+To start playing, enter http://localhost:3030
